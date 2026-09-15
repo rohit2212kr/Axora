@@ -1,8 +1,19 @@
 ﻿import axios from "axios";
 
+// Resolve the API base URL:
+//   - In production (Vercel): set VITE_API_URL = "https://axora-backend.onrender.com"
+//     (do NOT include "/api/v1" in the env value — it is appended here)
+//   - In local dev: falls back to http://localhost:5000/api/v1
+const resolveBaseURL = () => {
+    const envURL = import.meta.env.VITE_API_URL;
+    if (!envURL) return "http://localhost:5000/api/v1";
+    // Strip any trailing slash, then append /api/v1
+    return `${envURL.replace(/\/$/, "")}/api/v1`;
+};
+
 // Central Axios instance — all API calls go through this
 const axiosInstance = axios.create({
-    baseURL: "http://localhost:5000/api/v1",
+    baseURL: resolveBaseURL(),
     headers: {
         "Content-Type": "application/json",
     },
