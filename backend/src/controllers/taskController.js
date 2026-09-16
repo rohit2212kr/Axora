@@ -164,7 +164,7 @@ const getProjectTasks = async (req, res) => {
 const updateTask = async (req, res) => {
     try {
         const { projectId, taskId } = req.params;
-        const { title, description, status, priority, dueDate, assignedTo } = req.body;
+        const { title, description, status, priority, dueDate, assignedTo, subtasks } = req.body;
 
         // Fetch the task
         const task = await Task.findById(taskId);
@@ -248,7 +248,7 @@ const updateTask = async (req, res) => {
         }
 
         // Apply only the fields that were provided in the request body
-        const updatableFields = { title, description, status, priority, dueDate, assignedTo };
+        const updatableFields = { title, description, status, priority, dueDate, assignedTo, subtasks };
         Object.keys(updatableFields).forEach((key) => {
             if (updatableFields[key] !== undefined) {
                 task[key] = updatableFields[key];
@@ -410,49 +410,53 @@ const generateTaskSubtasks = async (req, res) => {
 
         // Fetch the task
         const task = await Task.findById(taskId);
-
         if (!task) {
-            return res.status(404).json({
-                success: false,
-                message: "Task not found",
-            });
+            return res.status(404).json({ success: false, message: "Task not found" });
         }
 
         // Verify the parent project exists
         const project = await Project.findById(projectId);
-
         if (!project) {
-            return res.status(404).json({
-                success: false,
-                message: "Project not found",
-            });
+            return res.status(404).json({ success: false, message: "Project not found" });
         }
 
-        // Call Gemini — may throw on API/parsing failure
-        const subtaskTitles = await aiService.generateSubtasks(task.title, task.description);
+        // Call Gemini — returns [{ title, estimatedMinutes }]
+        const structuredSubtasks = await aiService.generateSubtasks(
+            task.title,
+            task.description
+        );
 
-        // Transform plain strings into subtask subdocuments
-        const newSubtasks = subtaskTitles.map((step) => ({
-            title: step,
+        // Map to subdocuments — taskSchema stores title + isCompleted + estimatedMinutes
+        const newSubtasks = structuredSubtasks.map(({ title, estimatedMinutes }) => ({
+            title,
+            estimatedMinutes: estimatedMinutes ?? 30,
             isCompleted: false,
         }));
 
-        // Append to existing subtasks (does not overwrite previous runs)
+        // Append — does not overwrite previous AI runs
         task.subtasks.push(...newSubtasks);
         await task.save();
 
         return res.status(200).json({
             success: true,
-            message: "Subtasks generated successfully",
+            message: `${newSubtasks.length} subtasks generated successfully`,
             subtasks: task.subtasks,
             task,
         });
     } catch (error) {
         console.error("Task Subtask Error:", error);
-        // Return a user-friendly message — never leak raw AI/API errors to the client
+
+        // Surface quota errors as 429 so the client can show a meaningful message
+        if (error.message?.includes("quota")) {
+            return res.status(429).json({
+                success: false,
+                message: "AI quota exceeded. Please try again in a few minutes.",
+            });
+        }
+
         return res.status(500).json({
             success: false,
-            message: "There was a problem while generating subtasks. Please try again.",
+            message: "There was a problem generating subtasks. Please try again.",
         });
     }
 };

@@ -162,10 +162,21 @@ const getWorkspaceDashboard = async (req, res) => {
             status: "completed",
         });
 
-        const pendingTasks = await Task.countDocuments({
-            project: { $in: projectIds },
-            status: { $ne: "completed" },
-        });
+        const [todoCount, inProgressCount, inReviewCount] = await Promise.all([
+            Task.countDocuments({ project: { $in: projectIds }, status: "todo" }),
+            Task.countDocuments({ project: { $in: projectIds }, status: "in_progress" }),
+            Task.countDocuments({ project: { $in: projectIds }, status: "in_review" }),
+        ]);
+
+        const totalTasks = completedTasks + pendingTasks;
+        const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+        // Fetch recent tasks for activity velocity
+        const recentTasks = await Task.find({ project: { $in: projectIds } })
+            .sort({ updatedAt: -1 })
+            .limit(5)
+            .populate("project", "name")
+            .populate("assignedTo", "name email");
 
         return res.status(200).json({
             success: true,
@@ -174,6 +185,15 @@ const getWorkspaceDashboard = async (req, res) => {
                 activeProjects,
                 pendingTasks,
                 completedTasks,
+                totalTasks,
+                completionRate,
+                tasksByStatus: {
+                    todo: todoCount,
+                    in_progress: inProgressCount,
+                    in_review: inReviewCount,
+                    completed: completedTasks,
+                },
+                recentTasks,
             },
         });
     } catch (error) {

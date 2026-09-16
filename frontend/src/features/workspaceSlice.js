@@ -1,4 +1,4 @@
-﻿import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../api/axios";
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
@@ -7,7 +7,7 @@ const extractError = (error) =>
 
 // ─── Async Thunks ─────────────────────────────────────────────────────────────
 
-/** Fetch all workspaces the authenticated user belongs to */
+/** Fetch all workspaces current user belongs to */
 export const fetchWorkspaces = createAsyncThunk(
     "workspace/fetchWorkspaces",
     async (_, { rejectWithValue }) => {
@@ -93,7 +93,22 @@ export const deleteProject = createAsyncThunk(
     async ({ workspaceId, projectId }, { rejectWithValue }) => {
         try {
             await api.delete(`/workspaces/${workspaceId}/projects/${projectId}`);
-            return projectId; // return id so we can filter it out of state
+            return projectId;
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+/** Fetch workspace dashboard analytics
+ *  Backend route: GET /workspaces/:workspaceId/dashboard
+ */
+export const fetchDashboard = createAsyncThunk(
+    "workspace/fetchDashboard",
+    async (workspaceId, { rejectWithValue }) => {
+        try {
+            const { data } = await api.get(`/workspaces/${workspaceId}/dashboard`);
+            return data.data;
         } catch (error) {
             return rejectWithValue(extractError(error));
         }
@@ -108,6 +123,8 @@ const workspaceSlice = createSlice({
         workspaces:        [],
         currentWorkspace:  null,
         projects:          [],
+        dashboard:         null,
+        dashboardLoading:  false,
         loading:           false,
         error:             null,
     },
@@ -130,7 +147,6 @@ const workspaceSlice = createSlice({
             .addCase(fetchWorkspaces.fulfilled, (state, action) => {
                 state.loading    = false;
                 state.workspaces = action.payload ?? [];
-                // Auto-select first workspace if none is currently selected
                 if (!state.currentWorkspace && action.payload?.length > 0) {
                     state.currentWorkspace = action.payload[0];
                 }
@@ -152,20 +168,6 @@ const workspaceSlice = createSlice({
                 state.currentWorkspace = action.payload;
             })
             .addCase(createWorkspace.rejected, (state, action) => {
-                state.loading = false;
-                state.error   = action.payload;
-            });
-
-        // ── inviteMember ───────────────────────────────────────────────────
-        builder
-            .addCase(inviteMember.pending, (state) => {
-                state.loading = true;
-                state.error   = null;
-            })
-            .addCase(inviteMember.fulfilled, (state) => {
-                state.loading = false;
-            })
-            .addCase(inviteMember.rejected, (state, action) => {
                 state.loading = false;
                 state.error   = action.payload;
             });
@@ -215,6 +217,19 @@ const workspaceSlice = createSlice({
             .addCase(deleteProject.rejected, (state, action) => {
                 state.loading = false;
                 state.error   = action.payload;
+            });
+
+        // ── fetchDashboard ─────────────────────────────────────────────────
+        builder
+            .addCase(fetchDashboard.pending, (state) => {
+                state.dashboardLoading = true;
+            })
+            .addCase(fetchDashboard.fulfilled, (state, action) => {
+                state.dashboardLoading = false;
+                state.dashboard        = action.payload;
+            })
+            .addCase(fetchDashboard.rejected, (state) => {
+                state.dashboardLoading = false;
             });
     },
 });

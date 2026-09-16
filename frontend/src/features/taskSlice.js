@@ -1,4 +1,4 @@
-﻿import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../api/axios";
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
@@ -6,8 +6,6 @@ const extractError = (error) =>
     error.response?.data?.message || error.message || "Something went wrong";
 
 // ─── Async Thunks ─────────────────────────────────────────────────────────────
-// All task endpoints are nested:
-// /api/v1/workspaces/:workspaceId/projects/:projectId/tasks[/:taskId]
 
 /**
  * Fetch all tasks for a project.
@@ -20,7 +18,7 @@ export const fetchTasks = createAsyncThunk(
             const { data } = await api.get(
                 `/workspaces/${workspaceId}/projects/${projectId}/tasks`
             );
-            return data.tasks; // array
+            return data.tasks;
         } catch (error) {
             return rejectWithValue(extractError(error));
         }
@@ -56,7 +54,52 @@ export const updateTaskStatus = createAsyncThunk(
         try {
             const { data } = await api.put(
                 `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`,
-                fields  // { status, title, priority, dueDate, assignedTo, etc. }
+                fields
+            );
+            return data.task;
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+/**
+ * Trigger AI breakdown for a task.
+ * payload: { workspaceId, projectId, taskId }
+ */
+export const breakdownTaskWithAI = createAsyncThunk(
+    "task/breakdownTaskWithAI",
+    async ({ workspaceId, projectId, taskId }, { rejectWithValue }) => {
+        try {
+            const { data } = await api.post(
+                `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}/breakdown`
+            );
+            return data.task;
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+/**
+ * Toggle a subtask's isCompleted status and persist to backend.
+ * payload: { workspaceId, projectId, taskId, subtaskId, isCompleted }
+ */
+export const toggleSubtask = createAsyncThunk(
+    "task/toggleSubtask",
+    async ({ workspaceId, projectId, taskId, subtaskId, isCompleted }, { getState, rejectWithValue }) => {
+        try {
+            const state = getState();
+            const currentTask = state.task.tasks.find((t) => t._id === taskId);
+            if (!currentTask) throw new Error("Task not found");
+
+            const updatedSubtasks = (currentTask.subtasks || []).map((st) =>
+                st._id === subtaskId ? { ...st, isCompleted } : st
+            );
+
+            const { data } = await api.put(
+                `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`,
+                { subtasks: updatedSubtasks }
             );
             return data.task;
         } catch (error) {
@@ -76,7 +119,7 @@ export const deleteTask = createAsyncThunk(
             await api.delete(
                 `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`
             );
-            return taskId; // return id to filter out of state
+            return taskId;
         } catch (error) {
             return rejectWithValue(extractError(error));
         }
@@ -87,19 +130,27 @@ export const deleteTask = createAsyncThunk(
 const taskSlice = createSlice({
     name: "task",
     initialState: {
-        tasks:   [],
-        loading: false,
-        error:   null,
+        tasks:              [],
+        loading:            false,
+        aiLoading:          false,
+        aiGeneratingTaskId: null,
+        error:              null,
+        aiError:            null,
     },
     reducers: {
         clearTaskError(state) {
             state.error = null;
         },
-        // Call when leaving a project view to avoid stale tasks showing briefly
+        clearAiError(state) {
+            state.aiError = null;
+        },
         clearTasks(state) {
-            state.tasks   = [];
-            state.error   = null;
-            state.loading = false;
+            state.tasks              = [];
+            state.error              = null;
+            state.aiError            = null;
+            state.loading            = false;
+            state.aiLoading          = false;
+            state.aiGeneratingTaskId = null;
         },
     },
     extraReducers: (builder) => {
@@ -152,6 +203,36 @@ const taskSlice = createSlice({
                 state.error   = action.payload;
             });
 
+        // ── breakdownTaskWithAI ────────────────────────────────────────────
+        builder
+            .addCase(breakdownTaskWithAI.pending, (state, action) => {
+                state.aiLoading          = true;
+                state.aiGeneratingTaskId = action.meta.arg.taskId;
+                state.aiError            = null;
+            })
+            .addCase(breakdownTaskWithAI.fulfilled, (state, action) => {
+                state.aiLoading          = false;
+                state.aiGeneratingTaskId = null;
+                const updated = action.payload;
+                if (!updated) return;
+                const idx = state.tasks.findIndex((t) => t._id === updated._id);
+                if (idx !== -1) state.tasks[idx] = updated;
+            })
+            .addCase(breakdownTaskWithAI.rejected, (state, action) => {
+                state.aiLoading          = false;
+                state.aiGeneratingTaskId = null;
+                state.aiError            = action.payload;
+            });
+
+        // ── toggleSubtask ──────────────────────────────────────────────────
+        builder
+            .addCase(toggleSubtask.fulfilled, (state, action) => {
+                const updated = action.payload;
+                if (!updated) return;
+                const idx = state.tasks.findIndex((t) => t._id === updated._id);
+                if (idx !== -1) state.tasks[idx] = updated;
+            });
+
         // ── deleteTask ─────────────────────────────────────────────────────
         builder
             .addCase(deleteTask.pending, (state) => {
@@ -169,5 +250,5 @@ const taskSlice = createSlice({
     },
 });
 
-export const { clearTaskError, clearTasks } = taskSlice.actions;
+export const { clearTaskError, clearAiError, clearTasks } = taskSlice.actions;
 export default taskSlice.reducer;
