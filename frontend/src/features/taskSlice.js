@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../api/axios";
 
-// ─── Helper ──────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 const extractError = (error) =>
     error.response?.data?.message || error.message || "Something went wrong";
 
-// ─── Async Thunks ─────────────────────────────────────────────────────────────
+// ─── Async Thunks ────────────────────────────────────────────────────────────
 
 /**
  * Fetch all tasks for a project.
@@ -126,7 +126,7 @@ export const deleteTask = createAsyncThunk(
     }
 );
 
-// ─── Slice ────────────────────────────────────────────────────────────────────
+// ─── Slice ───────────────────────────────────────────────────────────────────
 const taskSlice = createSlice({
     name: "task",
     initialState: {
@@ -152,10 +152,18 @@ const taskSlice = createSlice({
             state.aiLoading          = false;
             state.aiGeneratingTaskId = null;
         },
+        optimisticallyMoveTask(state, action) {
+            const { taskId, status } = action.payload;
+            const task = state.tasks.find((t) => t._id === taskId);
+            if (task && status && task.status !== status) {
+                task._previousStatus = task.status;
+                task.status = status;
+            }
+        },
     },
     extraReducers: (builder) => {
 
-        // ── fetchTasks ─────────────────────────────────────────────────────
+        // ── fetchTasks ───────────────────────────────────────────────────────
         builder
             .addCase(fetchTasks.pending, (state) => {
                 state.loading = true;
@@ -170,40 +178,50 @@ const taskSlice = createSlice({
                 state.error   = action.payload;
             });
 
-        // ── createTask ─────────────────────────────────────────────────────
+        // ── createTask ───────────────────────────────────────────────────────
         builder
             .addCase(createTask.pending, (state) => {
-                state.loading = true;
-                state.error   = null;
+                state.error = null;
             })
             .addCase(createTask.fulfilled, (state, action) => {
-                state.loading = false;
                 if (action.payload) state.tasks.push(action.payload);
             })
             .addCase(createTask.rejected, (state, action) => {
-                state.loading = false;
-                state.error   = action.payload;
+                state.error = action.payload;
             });
 
-        // ── updateTaskStatus ───────────────────────────────────────────────
+        // ── updateTaskStatus (Optimistic UI Update + Rollback) ────────────────
         builder
-            .addCase(updateTaskStatus.pending, (state) => {
-                state.loading = true;
-                state.error   = null;
+            .addCase(updateTaskStatus.pending, (state, action) => {
+                const { taskId, status } = action.meta.arg;
+                const task = state.tasks.find((t) => t._id === taskId);
+                if (task && status && task.status !== status) {
+                    task._previousStatus = task.status;
+                    task.status = status;
+                }
+                state.error = null;
             })
             .addCase(updateTaskStatus.fulfilled, (state, action) => {
-                state.loading = false;
                 const updated = action.payload;
                 if (!updated) return;
                 const idx = state.tasks.findIndex((t) => t._id === updated._id);
-                if (idx !== -1) state.tasks[idx] = updated;
+                if (idx !== -1) {
+                    delete state.tasks[idx]._previousStatus;
+                    state.tasks[idx] = updated;
+                }
             })
             .addCase(updateTaskStatus.rejected, (state, action) => {
-                state.loading = false;
-                state.error   = action.payload;
+                state.error = action.payload;
+                // Rollback optimistic update
+                const { taskId } = action.meta.arg;
+                const task = state.tasks.find((t) => t._id === taskId);
+                if (task && task._previousStatus) {
+                    task.status = task._previousStatus;
+                    delete task._previousStatus;
+                }
             });
 
-        // ── breakdownTaskWithAI ────────────────────────────────────────────
+        // ── breakdownTaskWithAI ──────────────────────────────────────────────
         builder
             .addCase(breakdownTaskWithAI.pending, (state, action) => {
                 state.aiLoading          = true;
@@ -224,7 +242,7 @@ const taskSlice = createSlice({
                 state.aiError            = action.payload;
             });
 
-        // ── toggleSubtask ──────────────────────────────────────────────────
+        // ── toggleSubtask ────────────────────────────────────────────────────
         builder
             .addCase(toggleSubtask.fulfilled, (state, action) => {
                 const updated = action.payload;
@@ -233,22 +251,19 @@ const taskSlice = createSlice({
                 if (idx !== -1) state.tasks[idx] = updated;
             });
 
-        // ── deleteTask ─────────────────────────────────────────────────────
+        // ── deleteTask ───────────────────────────────────────────────────────
         builder
             .addCase(deleteTask.pending, (state) => {
-                state.loading = true;
-                state.error   = null;
+                state.error = null;
             })
             .addCase(deleteTask.fulfilled, (state, action) => {
-                state.loading = false;
-                state.tasks   = state.tasks.filter((t) => t._id !== action.payload);
+                state.tasks = state.tasks.filter((t) => t._id !== action.payload);
             })
             .addCase(deleteTask.rejected, (state, action) => {
-                state.loading = false;
-                state.error   = action.payload;
+                state.error = action.payload;
             });
     },
 });
 
-export const { clearTaskError, clearAiError, clearTasks } = taskSlice.actions;
+export const { clearTaskError, clearAiError, clearTasks, optimisticallyMoveTask } = taskSlice.actions;
 export default taskSlice.reducer;

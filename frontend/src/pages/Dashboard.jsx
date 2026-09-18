@@ -6,7 +6,6 @@ import {
     Activity,
     CheckCircle2,
     Clock,
-    TrendingUp,
     ArrowRight,
     Sparkles,
     Loader2
@@ -17,7 +16,7 @@ const Dashboard = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const { currentWorkspace, dashboard, dashboardLoading, projects, loading } = useSelector((s) => s.workspace);
+    const { currentWorkspace, dashboard, projects, loading } = useSelector((s) => s.workspace);
     const { user } = useSelector((s) => s.auth);
 
     useEffect(() => {

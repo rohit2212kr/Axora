@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft, Plus, Loader2 } from "lucide-react";
-import { fetchTasks, clearTasks } from "../features/taskSlice";
+import { fetchTasks, clearTasks, updateTaskStatus } from "../features/taskSlice";
 import KanbanColumn from "../components/kanban/KanbanColumn";
 import CreateTaskModal from "../components/modals/CreateTaskModal";
 import TaskDetailModal from "../components/modals/TaskDetailModal";
@@ -38,6 +38,25 @@ const ProjectBoard = () => {
     const openCreateModal = (status = "todo") => {
         setDefaultStatus(status);
         setModalOpen(true);
+    };
+
+    const handleDropTask = (e, targetStatus) => {
+        const taskId = e.dataTransfer.getData("text/plain");
+        if (!taskId) return;
+
+        const task = tasks.find((t) => t._id === taskId);
+        if (!task || task.status === targetStatus) return;
+
+        if (!currentWorkspace?._id || !projectId) return;
+
+        dispatch(
+            updateTaskStatus({
+                workspaceId: currentWorkspace._id,
+                projectId,
+                taskId,
+                status: targetStatus,
+            })
+        );
     };
 
     const tasksByStatus = COLUMNS.reduce((acc, col) => {
@@ -99,11 +118,12 @@ const ProjectBoard = () => {
                             key={col.key}
                             title={col.title}
                             statusKey={col.key}
-                            tasks={tasksByStatus[col.key]}
+                            tasks={tasksByStatus[col.key] || []}
                             workspaceId={currentWorkspace._id}
                             projectId={projectId}
                             onAddTask={openCreateModal}
                             onSelectTask={(task) => setSelectedTaskId(task._id)}
+                            onDropTask={handleDropTask}
                         />
                     ))}
                 </div>

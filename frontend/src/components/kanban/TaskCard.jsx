@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Calendar, Trash2, CheckSquare } from "lucide-react";
+import { Calendar, Trash2, CheckSquare, GripVertical } from "lucide-react";
 import { updateTaskStatus, deleteTask } from "../../features/taskSlice";
 
 const PRIORITY_STYLES = {
@@ -27,6 +27,7 @@ const isOverdue = (dateStr) => dateStr && new Date(dateStr) < new Date();
 const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
     const dispatch = useDispatch();
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
 
     const handleStatusChange = (e) => {
         e.stopPropagation();
@@ -38,20 +39,38 @@ const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
         dispatch(deleteTask({ workspaceId, projectId, taskId: task._id }));
     };
 
+    const handleDragStart = (e) => {
+        e.dataTransfer.setData("text/plain", task._id);
+        e.dataTransfer.effectAllowed = "move";
+        setIsDragging(true);
+    };
+
+    const handleDragEnd = () => {
+        setIsDragging(false);
+    };
+
     const overdue = isOverdue(task.dueDate) && task.status !== "completed";
     const subtasks = task.subtasks || [];
     const completedSubtasks = subtasks.filter((s) => s.isCompleted).length;
 
     return (
         <div
+            draggable={true}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
             onClick={() => onSelectTask?.(task)}
-            className="bg-card text-card-foreground border border-border hover:border-zinc-500 hover:shadow-lg hover:shadow-black/20 rounded-xl p-4 flex flex-col gap-3 transition-all group cursor-pointer"
+            className={`bg-card text-card-foreground border border-border hover:border-zinc-500 hover:shadow-lg hover:shadow-black/20 rounded-xl p-4 flex flex-col gap-3 transition-all group cursor-grab active:cursor-grabbing select-none ${
+                isDragging ? "opacity-40 border-dashed border-primary scale-[0.98]" : ""
+            }`}
         >
-            {/* Top row: priority + delete */}
+            {/* Top row: priority + drag grip + delete */}
             <div className="flex items-start justify-between gap-2">
-                <span className={`inline-flex items-center border rounded-full px-2 py-0.5 text-xs font-medium capitalize ${PRIORITY_STYLES[task.priority] ?? PRIORITY_STYLES.medium}`}>
-                    {task.priority}
-                </span>
+                <div className="flex items-center gap-1.5">
+                    <GripVertical className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors shrink-0" />
+                    <span className={`inline-flex items-center border rounded-full px-2 py-0.5 text-xs font-medium capitalize ${PRIORITY_STYLES[task.priority] ?? PRIORITY_STYLES.medium}`}>
+                        {task.priority}
+                    </span>
+                </div>
 
                 {/* Delete control */}
                 <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -108,7 +127,7 @@ const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
                     <span className={`flex items-center gap-1 text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
                         <Calendar className="w-3 h-3" />
                         {formatDate(task.dueDate)}
-                        {overdue && " · Overdue"}
+                        {overdue && " • Overdue"}
                     </span>
                 ) : <span />}
 
