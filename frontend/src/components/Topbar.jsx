@@ -1,11 +1,18 @@
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { logout } from "../features/authSlice";
 import { LogOut } from "lucide-react";
 
 const Topbar = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user }             = useSelector((s) => s.auth);
   const { currentWorkspace } = useSelector((s) => s.workspace);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/", { replace: true });
+  };
 
   return (
     <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 shrink-0">
@@ -40,7 +47,7 @@ const Topbar = () => {
 
         {/* Logout */}
         <button
-          onClick={() => dispatch(logout())}
+          onClick={handleLogout}
           title="Logout"
           className="flex items-center gap-1.5 text-muted-foreground hover:text-destructive transition-colors text-sm"
         >

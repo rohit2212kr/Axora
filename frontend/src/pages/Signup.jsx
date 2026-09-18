@@ -1,8 +1,8 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Navigate } from "react-router-dom";
-import { Mail, Lock, User, Loader2 } from "lucide-react";
+import { Mail, Lock, User, Loader2, ArrowLeft } from "lucide-react";
 import { registerUser, clearError } from "../features/authSlice";
 
 const Signup = () => {
@@ -29,9 +29,24 @@ const Signup = () => {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
 
+        {/* Back to Home link */}
+        <div className="mb-6">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to Home</span>
+          </Link>
+        </div>
+
         {/* Logo / heading */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground tracking-tight">Axora</h1>
+          <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-400 to-sky-400 bg-clip-text text-transparent">
+              Axora
+            </h1>
+          </Link>
           <p className="text-muted-foreground mt-2 text-sm">Create your account</p>
         </div>
 
@@ -129,7 +144,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed text-foreground font-semibold rounded-lg py-2.5 text-sm transition-colors mt-2"
+              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed text-primary-foreground font-semibold rounded-lg py-2.5 text-sm transition-colors mt-2"
             >
               {loading ? (
                 <>

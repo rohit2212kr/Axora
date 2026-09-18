@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Navigate } from "react-router-dom";
-import { Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Lock, Loader2, ArrowLeft } from "lucide-react";
 import { loginUser, clearError } from "../features/authSlice";
 
 const Login = () => {
@@ -29,9 +29,24 @@ const Login = () => {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
 
+        {/* Back to Home link */}
+        <div className="mb-6">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to Home</span>
+          </Link>
+        </div>
+
         {/* Logo / heading */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground tracking-tight">Axora</h1>
+          <Link to="/" className="inline-block hover:opacity-90 transition-opacity">
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-400 to-sky-400 bg-clip-text text-transparent">
+              Axora
+            </h1>
+          </Link>
           <p className="text-muted-foreground mt-2 text-sm">Sign in to your workspace</p>
         </div>
 
@@ -85,7 +100,7 @@ const Login = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <input
                   type="password"
-                  placeholder="········"
+                  placeholder="••••••••"
                   {...register("password", {
                     required: "Password is required",
                     minLength: { value: 6, message: "Minimum 6 characters" },
