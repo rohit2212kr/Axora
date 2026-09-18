@@ -56,8 +56,8 @@ const Dashboard = () => {
             value: activeProjects,
             subtitle: "Currently in progress",
             icon: Activity,
-            color: "text-indigo-400",
-            bg: "bg-indigo-500/10 border-indigo-500/20",
+            color: "text-primary",
+            bg: "bg-primary/10 border-primary/20",
         },
         {
             title: "Completed Tasks",
@@ -80,11 +80,11 @@ const Dashboard = () => {
     if (!currentWorkspace) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
-                <div className="w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
                     <FolderKanban className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-bold text-white">No Workspace Selected</h3>
-                <p className="text-slate-400 text-sm max-w-sm">
+                <h3 className="text-lg font-bold text-foreground">No Workspace Selected</h3>
+                <p className="text-muted-foreground text-sm max-w-sm">
                     Select or create a workspace using the sidebar to view productivity metrics and team tasks.
                 </p>
             </div>
@@ -96,17 +96,17 @@ const Dashboard = () => {
             {/* Header Greeting */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
                         Welcome back, {user?.name || "Member"}!
                     </h1>
-                    <p className="text-sm text-slate-400 mt-1">
-                        Here is what is happening across <strong className="text-slate-200">{currentWorkspace.name}</strong> today.
+                    <p className="text-sm text-muted-foreground mt-1">
+                        Here is what is happening across <strong className="text-foreground">{currentWorkspace.name}</strong> today.
                     </p>
                 </div>
 
                 <button
                     onClick={() => navigate("/projects")}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/20 transition-all self-start sm:self-auto"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-foreground text-sm font-semibold rounded-xl shadow-lg shadow-primary/20 transition-all self-start sm:self-auto"
                 >
                     <span>View Projects</span>
                     <ArrowRight className="w-4 h-4" />
@@ -120,10 +120,10 @@ const Dashboard = () => {
                     return (
                         <div
                             key={item.title}
-                            className="bg-slate-900 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between hover:border-slate-700 transition-all shadow-sm"
+                            className="bg-card border border-border rounded-2xl p-5 flex flex-col justify-between hover:border-border transition-all shadow-sm"
                         >
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     {item.title}
                                 </span>
                                 <div className={`p-2 rounded-xl border ${item.bg}`}>
@@ -131,14 +131,14 @@ const Dashboard = () => {
                                 </div>
                             </div>
                             <div className="mt-4">
-                                <div className="text-3xl font-extrabold text-white tracking-tight">
+                                <div className="text-3xl font-extrabold text-foreground tracking-tight">
                                     {dashboardLoading ? (
-                                        <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
+                                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                                     ) : (
                                         item.value
                                     )}
                                 </div>
-                                <p className="text-xs text-slate-500 mt-1">{item.subtitle}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{item.subtitle}</p>
                             </div>
                         </div>
                     );
@@ -148,28 +148,28 @@ const Dashboard = () => {
             {/* Task Velocity & Progress Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Progress Velocity Card */}
-                <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+                <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 flex flex-col justify-between">
                     <div>
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-indigo-400" />
-                                <h2 className="text-base font-bold text-white">Task Completion Velocity</h2>
+                                <TrendingUp className="w-5 h-5 text-primary" />
+                                <h2 className="text-base font-bold text-foreground">Task Completion Velocity</h2>
                             </div>
                             <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
                                 {completionRate}% Completed
                             </span>
                         </div>
-                        <p className="text-xs text-slate-400 mb-6">
+                        <p className="text-xs text-muted-foreground mb-6">
                             Breakdown of total deliverables across all active projects in this workspace.
                         </p>
 
                         {/* Velocity Progress Bar */}
                         <div className="space-y-2">
-                            <div className="flex justify-between text-xs text-slate-400 font-medium">
+                            <div className="flex justify-between text-xs text-muted-foreground font-medium">
                                 <span>Overall Project Health</span>
                                 <span>{completedTasks} of {totalTasks} Tasks Done</span>
                             </div>
-                            <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden flex">
+                            <div className="h-3 w-full bg-secondary rounded-full overflow-hidden flex">
                                 <div
                                     className="bg-emerald-500 h-full transition-all duration-500"
                                     style={{ width: `${completionRate}%` }}
@@ -189,68 +189,68 @@ const Dashboard = () => {
                         </div>
 
                         {/* Status Breakdown Legend & Counts */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800">
-                            <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
-                                <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-border">
+                            <div className="bg-muted border border-border rounded-xl p-3">
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                                     <div className="w-2 h-2 rounded-full bg-slate-500" />
                                     To Do
                                 </div>
-                                <span className="text-lg font-bold text-white">{tasksByStatus.todo || 0}</span>
+                                <span className="text-lg font-bold text-foreground">{tasksByStatus.todo || 0}</span>
                             </div>
 
-                            <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
-                                <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                            <div className="bg-muted border border-border rounded-xl p-3">
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                                     <div className="w-2 h-2 rounded-full bg-indigo-400" />
                                     In Progress
                                 </div>
-                                <span className="text-lg font-bold text-white">{tasksByStatus.in_progress || 0}</span>
+                                <span className="text-lg font-bold text-foreground">{tasksByStatus.in_progress || 0}</span>
                             </div>
 
-                            <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
-                                <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                            <div className="bg-muted border border-border rounded-xl p-3">
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                                     <div className="w-2 h-2 rounded-full bg-amber-400" />
                                     In Review
                                 </div>
-                                <span className="text-lg font-bold text-white">{tasksByStatus.in_review || 0}</span>
+                                <span className="text-lg font-bold text-foreground">{tasksByStatus.in_review || 0}</span>
                             </div>
 
-                            <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
-                                <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+                            <div className="bg-muted border border-border rounded-xl p-3">
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                                     <div className="w-2 h-2 rounded-full bg-emerald-400" />
                                     Completed
                                 </div>
-                                <span className="text-lg font-bold text-white">{tasksByStatus.completed || 0}</span>
+                                <span className="text-lg font-bold text-foreground">{tasksByStatus.completed || 0}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* AI & Quick Insights Card */}
-                <div className="bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-900 border border-indigo-500/20 rounded-2xl p-6 flex flex-col justify-between">
+                <div className="bg-gradient-to-br from-accent/40 via-slate-900 to-slate-900 border border-primary/20 rounded-2xl p-6 flex flex-col justify-between">
                     <div>
                         <div className="flex items-center gap-2 mb-3">
                             <Sparkles className="w-5 h-5 text-amber-300" />
-                            <h2 className="text-base font-bold text-white">AI Assistant Enabled</h2>
+                            <h2 className="text-base font-bold text-foreground">AI Assistant Enabled</h2>
                         </div>
-                        <p className="text-xs text-slate-300 leading-relaxed">
+                        <p className="text-xs text-foreground/80 leading-relaxed">
                             Axora uses Gemini AI to decompose complex tasks into actionable subtasks with estimated completion times.
                         </p>
 
                         <div className="mt-6 space-y-3">
-                            <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl">
-                                <span className="text-xs text-indigo-400 font-semibold uppercase tracking-wider block mb-1">
+                            <div className="p-3 bg-muted border border-border rounded-xl">
+                                <span className="text-xs text-primary font-semibold uppercase tracking-wider block mb-1">
                                     Productivity Tip
                                 </span>
-                                <p className="text-xs text-slate-400">
-                                    Open any task on your Kanban board and tap <span className="text-slate-200 font-medium">✨ Break down with AI</span> to get structured subtask checklists instantly.
+                                <p className="text-xs text-muted-foreground">
+                                    Open any task on your Kanban board and tap <span className="text-foreground font-medium">✨ Break down with AI</span> to get structured subtask checklists instantly.
                                 </p>
                             </div>
 
-                            <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-xl">
+                            <div className="p-3 bg-muted border border-border rounded-xl">
                                 <span className="text-xs text-emerald-400 font-semibold uppercase tracking-wider block mb-1">
                                     Workspace Status
                                 </span>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground">
                                     {projects.length} project{projects.length === 1 ? "" : "s"} tracked across {currentWorkspace.name}.
                                 </p>
                             </div>
@@ -259,7 +259,7 @@ const Dashboard = () => {
 
                     <button
                         onClick={() => navigate("/projects")}
-                        className="mt-6 w-full py-2.5 px-4 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 font-medium text-xs rounded-xl transition-colors flex items-center justify-center gap-2"
+                        className="mt-6 w-full py-2.5 px-4 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 font-medium text-xs rounded-xl transition-colors flex items-center justify-center gap-2"
                     >
                         <span>Open Project Kanban</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -269,26 +269,26 @@ const Dashboard = () => {
 
             {/* Recent Tasks List */}
             {recentTasks.length > 0 && (
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                    <h2 className="text-base font-bold text-white mb-4">Recent Activity & Tasks</h2>
+                <div className="bg-card border border-border rounded-2xl p-6">
+                    <h2 className="text-base font-bold text-foreground mb-4">Recent Activity & Tasks</h2>
                     <div className="divide-y divide-slate-800/80">
                         {recentTasks.map((t) => (
                             <div key={t._id} className="py-3 flex items-center justify-between gap-4 flex-wrap">
                                 <div>
-                                    <p className="text-sm font-medium text-white">{t.title}</p>
-                                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                                    <p className="text-sm font-medium text-foreground">{t.title}</p>
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                                         <span>Project: {t.project?.name || "General"}</span>
                                         {t.subtasks?.length > 0 && (
                                             <>
                                                 <span>•</span>
-                                                <span className="text-indigo-400 font-mono">
+                                                <span className="text-primary font-mono">
                                                     {t.subtasks.filter((s) => s.isCompleted).length}/{t.subtasks.length} subtasks
                                                 </span>
                                             </>
                                         )}
                                     </div>
                                 </div>
-                                <span className="text-xs capitalize font-medium px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                                <span className="text-xs capitalize font-medium px-2.5 py-1 rounded-full bg-secondary text-foreground/80 border border-border">
                                     {t.status.replace("_", " ")}
                                 </span>
                             </div>

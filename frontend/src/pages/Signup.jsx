@@ -26,21 +26,21 @@ const Signup = () => {
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
 
         {/* Logo / heading */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white tracking-tight">Axora</h1>
-          <p className="text-slate-400 mt-2 text-sm">Create your account</p>
+          <h1 className="text-4xl font-bold text-foreground tracking-tight">Axora</h1>
+          <p className="text-muted-foreground mt-2 text-sm">Create your account</p>
         </div>
 
         {/* Card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
+        <div className="bg-card border border-border rounded-2xl p-8 shadow-2xl">
 
           {/* Error alert */}
           {error && (
-            <div className="mb-5 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3">
+            <div className="mb-5 bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-lg px-4 py-3">
               {error}
             </div>
           )}
@@ -49,34 +49,34 @@ const Signup = () => {
 
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Jane Doe"
                   {...register("name", { required: "Full name is required" })}
-                  className={`w-full bg-slate-800 text-white placeholder-slate-500 rounded-lg pl-10 pr-4 py-2.5 text-sm border outline-none transition focus:ring-2 focus:ring-indigo-500 ${
+                  className={`w-full bg-muted text-foreground placeholder-muted-foreground rounded-lg pl-10 pr-4 py-2.5 text-sm border outline-none transition focus:ring-2 focus:ring-ring ${
                     errors.name
-                      ? "border-red-500/60"
-                      : "border-slate-700 focus:border-indigo-500"
+                      ? "border-destructive/60"
+                      : "border-border focus:border-ring"
                   }`}
                 />
               </div>
               {errors.name && (
-                <p className="mt-1.5 text-xs text-red-400">{errors.name.message}</p>
+                <p className="mt-1.5 text-xs text-destructive">{errors.name.message}</p>
               )}
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <input
                   type="email"
                   placeholder="you@example.com"
@@ -87,25 +87,25 @@ const Signup = () => {
                       message: "Enter a valid email address",
                     },
                   })}
-                  className={`w-full bg-slate-800 text-white placeholder-slate-500 rounded-lg pl-10 pr-4 py-2.5 text-sm border outline-none transition focus:ring-2 focus:ring-indigo-500 ${
+                  className={`w-full bg-muted text-foreground placeholder-muted-foreground rounded-lg pl-10 pr-4 py-2.5 text-sm border outline-none transition focus:ring-2 focus:ring-ring ${
                     errors.email
-                      ? "border-red-500/60"
-                      : "border-slate-700 focus:border-indigo-500"
+                      ? "border-destructive/60"
+                      : "border-border focus:border-ring"
                   }`}
                 />
               </div>
               {errors.email && (
-                <p className="mt-1.5 text-xs text-red-400">{errors.email.message}</p>
+                <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>
               )}
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <input
                   type="password"
                   placeholder="••••••••"
@@ -113,15 +113,15 @@ const Signup = () => {
                     required: "Password is required",
                     minLength: { value: 6, message: "Minimum 6 characters" },
                   })}
-                  className={`w-full bg-slate-800 text-white placeholder-slate-500 rounded-lg pl-10 pr-4 py-2.5 text-sm border outline-none transition focus:ring-2 focus:ring-indigo-500 ${
+                  className={`w-full bg-muted text-foreground placeholder-muted-foreground rounded-lg pl-10 pr-4 py-2.5 text-sm border outline-none transition focus:ring-2 focus:ring-ring ${
                     errors.password
-                      ? "border-red-500/60"
-                      : "border-slate-700 focus:border-indigo-500"
+                      ? "border-destructive/60"
+                      : "border-border focus:border-ring"
                   }`}
                 />
               </div>
               {errors.password && (
-                <p className="mt-1.5 text-xs text-red-400">{errors.password.message}</p>
+                <p className="mt-1.5 text-xs text-destructive">{errors.password.message}</p>
               )}
             </div>
 
@@ -129,7 +129,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-lg py-2.5 text-sm transition-colors mt-2"
+              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed text-foreground font-semibold rounded-lg py-2.5 text-sm transition-colors mt-2"
             >
               {loading ? (
                 <>
@@ -143,9 +143,9 @@ const Signup = () => {
           </form>
 
           {/* Footer link */}
-          <p className="text-center text-slate-500 text-sm mt-6">
+          <p className="text-center text-muted-foreground text-sm mt-6">
             Already have an account?{" "}
-            <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+            <Link to="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">
               Sign in
             </Link>
           </p>

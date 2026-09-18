@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Calendar, Trash2, CheckSquare, Sparkles } from "lucide-react";
+import { Calendar, Trash2, CheckSquare } from "lucide-react";
 import { updateTaskStatus, deleteTask } from "../../features/taskSlice";
 
 const PRIORITY_STYLES = {
-    low:    "text-slate-400 bg-slate-800       border-slate-700",
+    low:    "text-muted-foreground bg-secondary border-border",
     medium: "text-blue-400  bg-blue-500/10     border-blue-500/20",
     high:   "text-amber-400 bg-amber-500/10    border-amber-500/20",
     urgent: "text-rose-400  bg-rose-500/10     border-rose-500/20",
@@ -45,7 +45,7 @@ const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
     return (
         <div
             onClick={() => onSelectTask?.(task)}
-            className="bg-slate-900 border border-slate-800 hover:border-slate-700 hover:shadow-lg hover:shadow-black/40 rounded-xl p-4 flex flex-col gap-3 transition-all group cursor-pointer"
+            className="bg-card text-card-foreground border border-border hover:border-zinc-500 hover:shadow-lg hover:shadow-black/20 rounded-xl p-4 flex flex-col gap-3 transition-all group cursor-pointer"
         >
             {/* Top row: priority + delete */}
             <div className="flex items-start justify-between gap-2">
@@ -58,17 +58,17 @@ const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
                     {confirmDelete ? (
                         <div className="flex items-center gap-1.5">
                             <button onClick={handleDelete}
-                                className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors">
+                                className="text-xs text-destructive hover:text-destructive/80 font-medium transition-colors">
                                 Confirm
                             </button>
                             <button onClick={() => setConfirmDelete(false)}
-                                className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                                className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                                 Cancel
                             </button>
                         </div>
                     ) : (
                         <button onClick={() => setConfirmDelete(true)}
-                            className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition-all"
+                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
                             title="Delete task">
                             <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -77,25 +77,25 @@ const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
             </div>
 
             {/* Title */}
-            <p className="text-sm font-medium text-white leading-snug group-hover:text-indigo-300 transition-colors">
+            <p className="text-sm font-medium text-foreground leading-snug group-hover:text-primary transition-colors">
                 {task.title}
             </p>
 
             {/* Description */}
             {task.description && (
-                <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{task.description}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{task.description}</p>
             )}
 
             {/* Subtasks pill if present */}
             {subtasks.length > 0 && (
                 <div className="flex items-center gap-2 text-xs">
-                    <span className="inline-flex items-center gap-1 text-slate-400 bg-slate-800/80 border border-slate-700/60 px-2 py-0.5 rounded-md font-medium">
-                        <CheckSquare className="w-3 h-3 text-indigo-400" />
+                    <span className="inline-flex items-center gap-1 text-muted-foreground bg-secondary border border-border px-2 py-0.5 rounded-md font-medium">
+                        <CheckSquare className="w-3 h-3 text-primary" />
                         {completedSubtasks}/{subtasks.length} subtasks
                     </span>
-                    <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-indigo-500 transition-all"
+                            className="h-full bg-primary transition-all"
                             style={{ width: `${Math.round((completedSubtasks / subtasks.length) * 100)}%` }}
                         />
                     </div>
@@ -105,7 +105,7 @@ const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
             {/* Footer: due date + status mover */}
             <div className="flex items-center justify-between gap-2 mt-auto pt-1">
                 {task.dueDate ? (
-                    <span className={`flex items-center gap-1 text-xs ${overdue ? "text-rose-400" : "text-slate-500"}`}>
+                    <span className={`flex items-center gap-1 text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
                         <Calendar className="w-3 h-3" />
                         {formatDate(task.dueDate)}
                         {overdue && " · Overdue"}
@@ -117,7 +117,7 @@ const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
                     value={task.status}
                     onChange={handleStatusChange}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-slate-800 border border-slate-700 text-slate-400 text-xs rounded-lg px-2 py-1 outline-none cursor-pointer hover:border-slate-600 transition-colors focus:ring-1 focus:ring-indigo-500"
+                    className="bg-secondary border border-border text-muted-foreground text-xs rounded-lg px-2 py-1 outline-none cursor-pointer hover:border-zinc-500 transition-colors focus:ring-1 focus:ring-ring"
                 >
                     {STATUS_OPTIONS.map((s) => (
                         <option key={s.value} value={s.value}>{s.label}</option>

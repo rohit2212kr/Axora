@@ -48,9 +48,9 @@ const ProjectBoard = () => {
     if (!currentWorkspace) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
-                <p className="text-slate-400 text-sm">Select a workspace from the sidebar to view this board.</p>
+                <p className="text-muted-foreground text-sm">Select a workspace from the sidebar to view this board.</p>
                 <button onClick={() => navigate("/projects")}
-                    className="text-indigo-400 hover:text-indigo-300 text-sm transition-colors">
+                    className="text-primary hover:text-primary/80 text-sm transition-colors">
                     ← Back to Projects
                 </button>
             </div>
@@ -64,19 +64,19 @@ const ProjectBoard = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => navigate("/projects")}
-                        className="flex items-center gap-1.5 text-slate-400 hover:text-white text-sm transition-colors"
+                        className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Projects
                     </button>
-                    <span className="text-slate-700">/</span>
-                    <h1 className="text-lg font-bold text-white truncate max-w-xs">
+                    <span className="text-border">/</span>
+                    <h1 className="text-lg font-bold text-foreground truncate max-w-xs">
                         {project?.name ?? "Board"}
                     </h1>
                 </div>
                 <button
                     onClick={() => openCreateModal("todo")}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg px-4 py-2.5 text-sm transition-colors shadow-lg shadow-indigo-600/20"
+                    className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-foreground font-semibold rounded-lg px-4 py-2.5 text-sm transition-colors shadow-lg shadow-primary/20"
                 >
                     <Plus className="w-4 h-4" />
                     Add Task
@@ -85,7 +85,7 @@ const ProjectBoard = () => {
 
             {/* Loading */}
             {loading && (
-                <div className="flex items-center justify-center flex-1 gap-2 text-slate-400 min-h-[300px]">
+                <div className="flex items-center justify-center flex-1 gap-2 text-muted-foreground min-h-[300px]">
                     <Loader2 className="w-5 h-5 animate-spin" />
                     <span className="text-sm">Loading tasks...</span>
                 </div>

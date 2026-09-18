@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { X, Loader2, UserPlus } from "lucide-react";
@@ -30,21 +30,21 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
       onClick={onClose}
     >
       <div
-        className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md shadow-2xl"
+        className="bg-card text-card-foreground border border-border rounded-2xl w-full max-w-md shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
           <div className="flex items-center gap-2.5">
-            <UserPlus className="w-5 h-5 text-indigo-400" />
+            <UserPlus className="w-5 h-5 text-primary" />
             <div>
-              <h2 className="text-base font-semibold text-white">Invite Member</h2>
+              <h2 className="text-base font-semibold text-foreground">Invite Member</h2>
               {currentWorkspace && (
-                <p className="text-xs text-slate-500 mt-0.5">to {currentWorkspace.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">to {currentWorkspace.name}</p>
               )}
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-300 transition-colors">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -52,7 +52,7 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
         {/* Body */}
         <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-2.5">
+            <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-lg px-4 py-2.5">
               {error}
             </div>
           )}
@@ -65,8 +65,8 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              Email Address <span className="text-red-400">*</span>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Email Address <span className="text-destructive">*</span>
             </label>
             <input
               type="email"
@@ -75,19 +75,19 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
                 required: "Email is required",
                 pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter a valid email" },
               })}
-              className={`w-full bg-slate-800 text-white placeholder-slate-500 rounded-lg px-3.5 py-2.5 text-sm border outline-none transition focus:ring-2 focus:ring-indigo-500 ${
-                errors.email ? "border-red-500/60" : "border-slate-700 focus:border-indigo-500"
+              className={`w-full bg-muted text-foreground placeholder-muted-foreground rounded-lg px-3.5 py-2.5 text-sm border outline-none transition focus:ring-2 focus:ring-ring ${
+                errors.email ? "border-destructive/60" : "border-border focus:border-ring"
               }`}
             />
-            {errors.email && <p className="mt-1.5 text-xs text-red-400">{errors.email.message}</p>}
+            {errors.email && <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>}
           </div>
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Role</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Role</label>
             <select
               {...register("role")}
-              className="w-full bg-slate-800 text-white rounded-lg px-3.5 py-2.5 text-sm border border-slate-700 outline-none transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+              className="w-full bg-muted text-foreground rounded-lg px-3.5 py-2.5 text-sm border border-border outline-none transition focus:ring-2 focus:ring-ring focus:border-ring cursor-pointer"
             >
               <option value="member">Member</option>
               <option value="admin">Admin</option>
@@ -97,11 +97,11 @@ const InviteMemberModal = ({ isOpen, onClose }) => {
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <button type="button" onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors">
+              className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
               Cancel
             </button>
             <button type="submit" disabled={loading || !currentWorkspace}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-lg px-5 py-2 text-sm transition-colors">
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed text-primary-foreground font-semibold rounded-lg px-5 py-2 text-sm transition-colors">
               {loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Inviting...</> : "Send Invite"}
             </button>
           </div>
