@@ -1,11 +1,22 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../api/axios";
 
-// ─── Helper ──────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 const extractError = (error) =>
     error.response?.data?.message || error.message || "Something went wrong";
 
-// ─── Async Thunks ─────────────────────────────────────────────────────────────
+const safeParseJSON = (key) => {
+    try {
+        const value = localStorage.getItem(key);
+        return value ? JSON.parse(value) : null;
+    } catch {
+        return null;
+    }
+};
+
+const storedWorkspace = safeParseJSON("axora_current_workspace");
+
+// ─── Async Thunks ────────────────────────────────────────────────────────────
 
 /** Fetch all workspaces current user belongs to */
 export const fetchWorkspaces = createAsyncThunk(
@@ -50,9 +61,7 @@ export const inviteMember = createAsyncThunk(
     }
 );
 
-/** Fetch all projects in a workspace
- *  Backend route: GET /workspaces/:workspaceId/projects
- */
+/** Fetch all projects for a workspace */
 export const fetchProjects = createAsyncThunk(
     "workspace/fetchProjects",
     async (workspaceId, { rejectWithValue }) => {
@@ -65,9 +74,7 @@ export const fetchProjects = createAsyncThunk(
     }
 );
 
-/** Create a new project in a workspace
- *  Backend route: POST /workspaces/:workspaceId/projects
- */
+/** Create a new project in a workspace */
 export const createProject = createAsyncThunk(
     "workspace/createProject",
     async ({ workspaceId, name, description, status, deadline }, { rejectWithValue }) => {
@@ -85,9 +92,7 @@ export const createProject = createAsyncThunk(
     }
 );
 
-/** Delete a project
- *  Backend route: DELETE /workspaces/:workspaceId/projects/:projectId
- */
+/** Delete a project */
 export const deleteProject = createAsyncThunk(
     "workspace/deleteProject",
     async ({ workspaceId, projectId }, { rejectWithValue }) => {
@@ -100,9 +105,7 @@ export const deleteProject = createAsyncThunk(
     }
 );
 
-/** Fetch workspace dashboard analytics
- *  Backend route: GET /workspaces/:workspaceId/dashboard
- */
+/** Fetch workspace dashboard analytics */
 export const fetchDashboard = createAsyncThunk(
     "workspace/fetchDashboard",
     async (workspaceId, { rejectWithValue }) => {
@@ -115,13 +118,13 @@ export const fetchDashboard = createAsyncThunk(
     }
 );
 
-// ─── Slice ────────────────────────────────────────────────────────────────────
+// ─── Slice ───────────────────────────────────────────────────────────────────
 
 const workspaceSlice = createSlice({
     name: "workspace",
     initialState: {
         workspaces:        [],
-        currentWorkspace:  null,
+        currentWorkspace:  storedWorkspace || null,
         projects:          [],
         dashboard:         null,
         dashboardLoading:  false,
@@ -131,6 +134,13 @@ const workspaceSlice = createSlice({
     reducers: {
         setCurrentWorkspace(state, action) {
             state.currentWorkspace = action.payload;
+            if (action.payload) {
+                localStorage.setItem("axora_current_workspace_id", action.payload._id);
+                localStorage.setItem("axora_current_workspace", JSON.stringify(action.payload));
+            } else {
+                localStorage.removeItem("axora_current_workspace_id");
+                localStorage.removeItem("axora_current_workspace");
+            }
         },
         clearWorkspaceError(state) {
             state.error = null;
@@ -138,7 +148,7 @@ const workspaceSlice = createSlice({
     },
     extraReducers: (builder) => {
 
-        // ── fetchWorkspaces ────────────────────────────────────────────────
+        // ── fetchWorkspaces ──────────────────────────────────────────────────
         builder
             .addCase(fetchWorkspaces.pending, (state) => {
                 state.loading = true;
@@ -146,9 +156,24 @@ const workspaceSlice = createSlice({
             })
             .addCase(fetchWorkspaces.fulfilled, (state, action) => {
                 state.loading    = false;
-                state.workspaces = action.payload ?? [];
-                if (!state.currentWorkspace && action.payload?.length > 0) {
-                    state.currentWorkspace = action.payload[0];
+                const fetchedList = action.payload ?? [];
+                state.workspaces = fetchedList;
+
+                const targetId = localStorage.getItem("axora_current_workspace_id") || state.currentWorkspace?._id;
+                const matched = fetchedList.find((ws) => ws._id === targetId);
+
+                if (matched) {
+                    state.currentWorkspace = matched;
+                    localStorage.setItem("axora_current_workspace_id", matched._id);
+                    localStorage.setItem("axora_current_workspace", JSON.stringify(matched));
+                } else if (fetchedList.length > 0) {
+                    state.currentWorkspace = fetchedList[0];
+                    localStorage.setItem("axora_current_workspace_id", fetchedList[0]._id);
+                    localStorage.setItem("axora_current_workspace", JSON.stringify(fetchedList[0]));
+                } else {
+                    state.currentWorkspace = null;
+                    localStorage.removeItem("axora_current_workspace_id");
+                    localStorage.removeItem("axora_current_workspace");
                 }
             })
             .addCase(fetchWorkspaces.rejected, (state, action) => {
@@ -156,7 +181,7 @@ const workspaceSlice = createSlice({
                 state.error   = action.payload;
             });
 
-        // ── createWorkspace ────────────────────────────────────────────────
+        // ── createWorkspace ──────────────────────────────────────────────────
         builder
             .addCase(createWorkspace.pending, (state) => {
                 state.loading = true;
@@ -164,15 +189,19 @@ const workspaceSlice = createSlice({
             })
             .addCase(createWorkspace.fulfilled, (state, action) => {
                 state.loading = false;
-                state.workspaces.push(action.payload);
-                state.currentWorkspace = action.payload;
+                if (action.payload) {
+                    state.workspaces.push(action.payload);
+                    state.currentWorkspace = action.payload;
+                    localStorage.setItem("axora_current_workspace_id", action.payload._id);
+                    localStorage.setItem("axora_current_workspace", JSON.stringify(action.payload));
+                }
             })
             .addCase(createWorkspace.rejected, (state, action) => {
                 state.loading = false;
                 state.error   = action.payload;
             });
 
-        // ── fetchProjects ──────────────────────────────────────────────────
+        // ── fetchProjects ────────────────────────────────────────────────────
         builder
             .addCase(fetchProjects.pending, (state) => {
                 state.loading = true;
@@ -187,7 +216,7 @@ const workspaceSlice = createSlice({
                 state.error   = action.payload;
             });
 
-        // ── createProject ──────────────────────────────────────────────────
+        // ── createProject ────────────────────────────────────────────────────
         builder
             .addCase(createProject.pending, (state) => {
                 state.loading = true;
@@ -202,7 +231,7 @@ const workspaceSlice = createSlice({
                 state.error   = action.payload;
             });
 
-        // ── deleteProject ──────────────────────────────────────────────────
+        // ── deleteProject ────────────────────────────────────────────────────
         builder
             .addCase(deleteProject.pending, (state) => {
                 state.loading = true;
@@ -219,7 +248,7 @@ const workspaceSlice = createSlice({
                 state.error   = action.payload;
             });
 
-        // ── fetchDashboard ─────────────────────────────────────────────────
+        // ── fetchDashboard ───────────────────────────────────────────────────
         builder
             .addCase(fetchDashboard.pending, (state) => {
                 state.dashboardLoading = true;
@@ -230,6 +259,14 @@ const workspaceSlice = createSlice({
             })
             .addCase(fetchDashboard.rejected, (state) => {
                 state.dashboardLoading = false;
+            })
+            .addCase("auth/logout", (state) => {
+                state.workspaces = [];
+                state.currentWorkspace = null;
+                state.projects = [];
+                state.dashboard = null;
+                state.loading = false;
+                state.error = null;
             });
     },
 });

@@ -1,9 +1,17 @@
 const express = require("express");
 const { protect } = require("../middleware/authMiddleware");
 const { verifyWorkspaceRole } = require("../middleware/roleMiddleware");
-const { createWorkspace, inviteMember, getWorkspaceDashboard } = require("../controllers/workspaceController");
+const {
+    createWorkspace,
+    getUserWorkspaces,
+    inviteMember,
+    getWorkspaceDashboard,
+} = require("../controllers/workspaceController");
 
 const router = express.Router();
+
+// GET /api/v1/workspaces - Fetch all workspaces user belongs to
+router.get("/", protect, getUserWorkspaces);
 
 // POST /api/v1/workspaces - Create a new workspace
 router.post("/", protect, createWorkspace);

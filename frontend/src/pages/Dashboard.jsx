@@ -17,7 +17,7 @@ const Dashboard = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const { currentWorkspace, dashboard, dashboardLoading, projects } = useSelector((s) => s.workspace);
+    const { currentWorkspace, dashboard, dashboardLoading, projects, loading } = useSelector((s) => s.workspace);
     const { user } = useSelector((s) => s.auth);
 
     useEffect(() => {
@@ -78,6 +78,15 @@ const Dashboard = () => {
     ];
 
     if (!currentWorkspace) {
+        if (loading) {
+            return (
+                <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Loading workspace...</p>
+                </div>
+            );
+        }
+
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
                 <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
@@ -113,63 +122,53 @@ const Dashboard = () => {
                 </button>
             </div>
 
-            {/* Metric Stat Cards */}
+            {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((item) => {
+                {stats.map((item, idx) => {
                     const Icon = item.icon;
                     return (
                         <div
-                            key={item.title}
-                            className="bg-card border border-border rounded-2xl p-5 flex flex-col justify-between hover:border-border transition-all shadow-sm"
+                            key={idx}
+                            className="bg-card border border-border rounded-2xl p-5 hover:border-primary/40 transition-all flex flex-col justify-between"
                         >
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                    {item.title}
-                                </span>
-                                <div className={`p-2 rounded-xl border ${item.bg}`}>
+                                <span className="text-xs font-medium text-muted-foreground">{item.title}</span>
+                                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${item.bg}`}>
                                     <Icon className={`w-4 h-4 ${item.color}`} />
                                 </div>
                             </div>
                             <div className="mt-4">
-                                <div className="text-3xl font-extrabold text-foreground tracking-tight">
-                                    {dashboardLoading ? (
-                                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                                    ) : (
-                                        item.value
-                                    )}
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">{item.subtitle}</p>
+                                <h3 className="text-2xl font-bold text-foreground tracking-tight font-mono">{item.value}</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">{item.subtitle}</p>
                             </div>
                         </div>
                     );
                 })}
             </div>
 
-            {/* Task Velocity & Progress Section */}
+            {/* Middle Section: Progress Bar & AI Showcase */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Progress Velocity Card */}
+
+                {/* Task Completion Velocity */}
                 <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-6 flex flex-col justify-between">
                     <div>
                         <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-primary" />
+                            <div>
                                 <h2 className="text-base font-bold text-foreground">Task Completion Velocity</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">Real-time status tracking for active projects</p>
                             </div>
-                            <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-                                {completionRate}% Completed
+                            <span className="text-xs font-mono font-bold text-primary bg-accent px-2.5 py-1 rounded-full border border-primary/20">
+                                {completionRate}% Complete
                             </span>
                         </div>
-                        <p className="text-xs text-muted-foreground mb-6">
-                            Breakdown of total deliverables across all active projects in this workspace.
-                        </p>
 
-                        {/* Velocity Progress Bar */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-xs text-muted-foreground font-medium">
-                                <span>Overall Project Health</span>
-                                <span>{completedTasks} of {totalTasks} Tasks Done</span>
+                        {/* Visual Progress Bar */}
+                        <div className="mt-4">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5 font-mono">
+                                <span>{completedTasks} completed</span>
+                                <span>{totalTasks} total tasks</span>
                             </div>
-                            <div className="h-3 w-full bg-secondary rounded-full overflow-hidden flex">
+                            <div className="w-full bg-secondary h-3 rounded-full overflow-hidden flex">
                                 <div
                                     className="bg-emerald-500 h-full transition-all duration-500"
                                     style={{ width: `${completionRate}%` }}

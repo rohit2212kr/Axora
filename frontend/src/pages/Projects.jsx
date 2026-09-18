@@ -1,11 +1,11 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Plus, Calendar, Trash2, FolderKanban } from "lucide-react";
 import { fetchProjects, deleteProject } from "../features/workspaceSlice";
 import CreateProjectModal from "../components/modals/CreateProjectModal";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 const STATUS_STYLES = {
     planning:  "bg-amber-500/15   text-amber-400   border-amber-500/30",
     active:    "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
@@ -24,7 +24,7 @@ const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
 };
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
+// ─── Skeleton ────────────────────────────────────────────────────────────────
 const CardSkeleton = () => (
     <div className="bg-card border border-border rounded-2xl p-5 animate-pulse space-y-3">
         <div className="h-4 bg-secondary rounded w-2/3" />
@@ -37,7 +37,7 @@ const CardSkeleton = () => (
     </div>
 );
 
-// ─── Project Card ─────────────────────────────────────────────────────────────
+// ─── Project Card ────────────────────────────────────────────────────────────
 const ProjectCard = ({ project, onDelete, onClick }) => {
     const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -89,7 +89,7 @@ const ProjectCard = ({ project, onDelete, onClick }) => {
     );
 };
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page ────────────────────────────────────────────────────────────────────
 const Projects = () => {
     const dispatch  = useDispatch();
     const navigate  = useNavigate();
@@ -106,6 +106,14 @@ const Projects = () => {
     };
 
     if (!currentWorkspace) {
+        if (loading) {
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3].map((n) => <CardSkeleton key={n} />)}
+                </div>
+            );
+        }
+
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-4">
                 <FolderKanban className="w-12 h-12 text-slate-700" />

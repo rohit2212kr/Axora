@@ -1,4 +1,4 @@
-﻿import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../api/axios";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -15,7 +15,7 @@ const safeParseJSON = (key) => {
 const storedToken = localStorage.getItem("axora_token") || null;
 const storedUser  = safeParseJSON("axora_user");
 
-// ─── Async Thunks ─────────────────────────────────────────────────────────────
+// ─── Async Thunks ────────────────────────────────────────────────────────────
 
 export const loginUser = createAsyncThunk(
     "auth/loginUser",
@@ -51,7 +51,7 @@ export const registerUser = createAsyncThunk(
     }
 );
 
-// ─── Slice ────────────────────────────────────────────────────────────────────
+// ─── Slice ───────────────────────────────────────────────────────────────────
 
 const authSlice = createSlice({
     name: "auth",
@@ -71,13 +71,15 @@ const authSlice = createSlice({
             state.error           = null;
             localStorage.removeItem("axora_token");
             localStorage.removeItem("axora_user");
+            localStorage.removeItem("axora_current_workspace_id");
+            localStorage.removeItem("axora_current_workspace");
         },
         clearError(state) {
             state.error = null;
         },
     },
     extraReducers: (builder) => {
-        // ── loginUser ──────────────────────────────────────────────────────
+        // ── loginUser ──
         builder
             .addCase(loginUser.pending, (state) => {
                 state.loading = true;
@@ -94,7 +96,7 @@ const authSlice = createSlice({
                 state.error   = action.payload;
             });
 
-        // ── registerUser ───────────────────────────────────────────────────
+        // ── registerUser ──
         builder
             .addCase(registerUser.pending, (state) => {
                 state.loading = true;

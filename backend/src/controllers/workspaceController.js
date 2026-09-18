@@ -4,6 +4,31 @@ const Project = require("../models/project.model");
 const Task = require("../models/taskModel");
 
 /**
+ * Get all workspaces the authenticated user belongs to
+ * @route  GET /api/v1/workspaces
+ * @access Private
+ */
+const getUserWorkspaces = async (req, res) => {
+    try {
+        const workspaces = await Workspace.find({ "members.user": req.user._id })
+            .populate("createdBy", "name email")
+            .populate("members.user", "name email")
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            data: workspaces,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Server error while fetching workspaces",
+            error: error.message,
+        });
+    }
+};
+
+/**
  * Create a new workspace
  * @route  POST /api/v1/workspaces
  * @access Private
@@ -74,6 +99,13 @@ const inviteMember = async (req, res) => {
 
         // Fetch the workspace
         const workspace = await Workspace.findById(workspaceId);
+
+        if (!workspace) {
+            return res.status(404).json({
+                success: false,
+                message: "Workspace not found",
+            });
+        }
 
         // Edge Case 2: Check if user is already a member
         const alreadyMember = workspace.members.some(
@@ -168,6 +200,7 @@ const getWorkspaceDashboard = async (req, res) => {
             Task.countDocuments({ project: { $in: projectIds }, status: "in_review" }),
         ]);
 
+        const pendingTasks = todoCount + inProgressCount + inReviewCount;
         const totalTasks = completedTasks + pendingTasks;
         const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
@@ -207,6 +240,7 @@ const getWorkspaceDashboard = async (req, res) => {
 
 module.exports = {
     createWorkspace,
+    getUserWorkspaces,
     inviteMember,
     getWorkspaceDashboard,
 };
