@@ -5,6 +5,9 @@ import AppLayout      from "./components/AppLayout";
 import LandingPage    from "./pages/LandingPage";
 import Login          from "./pages/Login";
 import Signup         from "./pages/Signup";
+import VerifyOTP      from "./pages/VerifyOTP";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword  from "./pages/ResetPassword";
 import Dashboard      from "./pages/Dashboard";
 import Projects       from "./pages/Projects";
 import ProjectBoard   from "./pages/ProjectBoard";
@@ -24,8 +27,11 @@ const App = () => (
             <Route path="/" element={<RootRoute />} />
 
             {/* Public auth */}
-            <Route path="/login"  element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/login"           element={<Login />} />
+            <Route path="/signup"          element={<Signup />} />
+            <Route path="/verify-otp"      element={<VerifyOTP />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password"  element={<ResetPassword />} />
 
             {/* Protected - all children share the AppLayout shell */}
             <Route

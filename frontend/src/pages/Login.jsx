@@ -1,13 +1,20 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Mail, Lock, Loader2, ArrowLeft } from "lucide-react";
-import { loginUser, clearError } from "../features/authSlice";
+import { loginUser, clearError, clearAuthFlow } from "../features/authSlice";
 
 const Login = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated, loading, error } = useSelector((s) => s.auth);
+  const navigate = useNavigate();
+  const {
+    isAuthenticated,
+    loading,
+    error,
+    requiresVerification,
+    pendingEmail,
+  } = useSelector((s) => s.auth);
 
   const {
     register,
@@ -23,12 +30,18 @@ const Login = () => {
     dispatch(loginUser({ email, password }));
   };
 
+  // If login says "verify your email", redirect to /verify-otp
+  useEffect(() => {
+    if (requiresVerification && pendingEmail) {
+      navigate("/verify-otp", { state: { email: pendingEmail } });
+    }
+  }, [requiresVerification, pendingEmail, navigate]);
+
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-
         {/* Back to Home link */}
         <div className="mb-6">
           <Link
@@ -52,7 +65,6 @@ const Login = () => {
 
         {/* Card */}
         <div className="bg-card border border-border rounded-2xl p-8 shadow-2xl">
-
           {/* Error alert */}
           {error && (
             <div className="mb-5 bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-lg px-4 py-3">
@@ -61,12 +73,9 @@ const Login = () => {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
-
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <input
@@ -93,14 +102,20 @@ const Login = () => {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-foreground">Password</label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-primary hover:text-primary/80 transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"}
                   {...register("password", {
                     required: "Password is required",
                     minLength: { value: 6, message: "Minimum 6 characters" },

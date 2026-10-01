@@ -20,6 +20,33 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+
+        // ── Email Verification Fields ─────────────────────────
+        isVerified: {
+            type: Boolean,
+            default: false,
+        },
+
+        emailVerificationOTP: {
+            type: String,
+            select: false, // SHA-256 hashed, never returned in queries
+        },
+
+        emailVerificationExpires: {
+            type: Date,
+            select: false,
+        },
+
+        // ── Password Reset Fields ─────────────────────────────
+        passwordResetOTP: {
+            type: String,
+            select: false, // SHA-256 hashed
+        },
+
+        passwordResetExpires: {
+            type: Date,
+            select: false,
+        },
     },
     {
         timestamps: true,
@@ -31,7 +58,7 @@ userSchema.pre("save", async function () {
     if (!this.isModified("password")) {
         return;
     }
-    
+
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
 });
