@@ -3,6 +3,7 @@ const cors    = require("cors");
 const authRoutes      = require("./routes/authRoutes");
 const workspaceRoutes = require("./routes/workspaceRoutes");
 const projectRoutes   = require("./routes/projectRoutes");
+const taskRoutes      = require("./routes/taskRoutes");
 const aiRoutes        = require("./routes/ai.routes");
 
 const app = express();
@@ -37,13 +38,13 @@ const corsOptions = {
 // app.options() wildcard is redundant and breaks under Express 5 + path-to-regexp v8.
 app.use(cors(corsOptions));
 
-
 app.use(express.json());
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api/v1/auth",                             authRoutes);
 app.use("/api/v1/workspaces",                       workspaceRoutes);
 app.use("/api/v1/workspaces/:workspaceId/projects", projectRoutes);
+app.use("/api/v1/tasks",                            taskRoutes);
 app.use("/api/v1",                                  aiRoutes);
 
 module.exports = app;

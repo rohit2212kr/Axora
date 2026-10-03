@@ -27,15 +27,15 @@ export const fetchTasks = createAsyncThunk(
 
 /**
  * Create a new task inside a project.
- * payload: { workspaceId, projectId, title, description, status, priority, dueDate, assignedTo? }
+ * payload: { workspaceId, projectId, title, description, status, priority, dueDate, assignedTo?, labels? }
  */
 export const createTask = createAsyncThunk(
     "task/createTask",
-    async ({ workspaceId, projectId, title, description, status, priority, dueDate, assignedTo }, { rejectWithValue }) => {
+    async ({ workspaceId, projectId, title, description, status, priority, dueDate, assignedTo, labels }, { rejectWithValue }) => {
         try {
             const { data } = await api.post(
                 `/workspaces/${workspaceId}/projects/${projectId}/tasks`,
-                { title, description, status, priority, dueDate, assignedTo }
+                { title, description, status, priority, dueDate, assignedTo, labels }
             );
             return data.task;
         } catch (error) {
@@ -52,11 +52,68 @@ export const updateTaskStatus = createAsyncThunk(
     "task/updateTaskStatus",
     async ({ workspaceId, projectId, taskId, ...fields }, { rejectWithValue }) => {
         try {
-            const { data } = await api.put(
-                `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`,
-                fields
-            );
+            const url = workspaceId && projectId
+                ? `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`
+                : `/tasks/${taskId}`;
+            const { data } = await api.put(url, fields);
             return data.task;
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+/**
+ * Add a comment to a task.
+ * payload: { workspaceId, projectId, taskId, text }
+ */
+export const addComment = createAsyncThunk(
+    "task/addComment",
+    async ({ workspaceId, projectId, taskId, text }, { rejectWithValue }) => {
+        try {
+            const url = workspaceId && projectId
+                ? `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}/comments`
+                : `/tasks/${taskId}/comments`;
+            const { data } = await api.post(url, { text });
+            return data.task || data;
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+/**
+ * Delete a comment from a task.
+ * payload: { workspaceId, projectId, taskId, commentId }
+ */
+export const deleteComment = createAsyncThunk(
+    "task/deleteComment",
+    async ({ workspaceId, projectId, taskId, commentId }, { rejectWithValue }) => {
+        try {
+            const url = workspaceId && projectId
+                ? `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}/comments/${commentId}`
+                : `/tasks/${taskId}/comments/${commentId}`;
+            const { data } = await api.delete(url);
+            return data.task || { taskId, comments: data.comments, activity: data.activity };
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+/**
+ * Update labels on a task.
+ * payload: { workspaceId, projectId, taskId, labels }
+ */
+export const updateTaskLabels = createAsyncThunk(
+    "task/updateTaskLabels",
+    async ({ workspaceId, projectId, taskId, labels }, { rejectWithValue }) => {
+        try {
+            const url = workspaceId && projectId
+                ? `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}/labels`
+                : `/tasks/${taskId}/labels`;
+            const { data } = await api.put(url, { labels });
+            return data.task || { taskId, labels: data.labels, activity: data.activity };
         } catch (error) {
             return rejectWithValue(extractError(error));
         }
@@ -71,9 +128,10 @@ export const breakdownTaskWithAI = createAsyncThunk(
     "task/breakdownTaskWithAI",
     async ({ workspaceId, projectId, taskId }, { rejectWithValue }) => {
         try {
-            const { data } = await api.post(
-                `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}/breakdown`
-            );
+            const url = workspaceId && projectId
+                ? `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}/ai-breakdown`
+                : `/tasks/${taskId}/ai-breakdown`;
+            const { data } = await api.post(url);
             return data.task;
         } catch (error) {
             return rejectWithValue(extractError(error));
@@ -97,10 +155,11 @@ export const toggleSubtask = createAsyncThunk(
                 st._id === subtaskId ? { ...st, isCompleted } : st
             );
 
-            const { data } = await api.put(
-                `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`,
-                { subtasks: updatedSubtasks }
-            );
+            const url = workspaceId && projectId
+                ? `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`
+                : `/tasks/${taskId}`;
+
+            const { data } = await api.put(url, { subtasks: updatedSubtasks });
             return data.task;
         } catch (error) {
             return rejectWithValue(extractError(error));
@@ -116,9 +175,10 @@ export const deleteTask = createAsyncThunk(
     "task/deleteTask",
     async ({ workspaceId, projectId, taskId }, { rejectWithValue }) => {
         try {
-            await api.delete(
-                `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`
-            );
+            const url = workspaceId && projectId
+                ? `/workspaces/${workspaceId}/projects/${projectId}/tasks/${taskId}`
+                : `/tasks/${taskId}`;
+            await api.delete(url);
             return taskId;
         } catch (error) {
             return rejectWithValue(extractError(error));
@@ -132,6 +192,8 @@ const taskSlice = createSlice({
     initialState: {
         tasks:              [],
         loading:            false,
+        commentLoading:     false,
+        labelsLoading:      false,
         aiLoading:          false,
         aiGeneratingTaskId: null,
         error:              null,
@@ -149,6 +211,8 @@ const taskSlice = createSlice({
             state.error              = null;
             state.aiError            = null;
             state.loading            = false;
+            state.commentLoading     = false;
+            state.labelsLoading      = false;
             state.aiLoading          = false;
             state.aiGeneratingTaskId = null;
         },
@@ -219,6 +283,66 @@ const taskSlice = createSlice({
                     task.status = task._previousStatus;
                     delete task._previousStatus;
                 }
+            });
+
+        // ── addComment ───────────────────────────────────────────────────────
+        builder
+            .addCase(addComment.pending, (state) => {
+                state.commentLoading = true;
+                state.error = null;
+            })
+            .addCase(addComment.fulfilled, (state, action) => {
+                state.commentLoading = false;
+                const updated = action.payload.task || action.payload;
+                if (updated?._id) {
+                    const idx = state.tasks.findIndex((t) => t._id === updated._id);
+                    if (idx !== -1) state.tasks[idx] = updated;
+                }
+            })
+            .addCase(addComment.rejected, (state, action) => {
+                state.commentLoading = false;
+                state.error = action.payload;
+            });
+
+        // ── deleteComment ────────────────────────────────────────────────────
+        builder
+            .addCase(deleteComment.fulfilled, (state, action) => {
+                const updated = action.payload.task || action.payload;
+                if (updated?._id) {
+                    const idx = state.tasks.findIndex((t) => t._id === updated._id);
+                    if (idx !== -1) state.tasks[idx] = updated;
+                } else if (action.payload.taskId) {
+                    const idx = state.tasks.findIndex((t) => t._id === action.payload.taskId);
+                    if (idx !== -1) {
+                        state.tasks[idx].comments = action.payload.comments;
+                        if (action.payload.activity) state.tasks[idx].activity = action.payload.activity;
+                    }
+                }
+            });
+
+        // ── updateTaskLabels ─────────────────────────────────────────────────
+        builder
+            .addCase(updateTaskLabels.pending, (state) => {
+                state.labelsLoading = true;
+                state.error = null;
+            })
+            .addCase(updateTaskLabels.fulfilled, (state, action) => {
+                state.labelsLoading = false;
+                const updated = action.payload.task || action.payload;
+                if (updated?._id) {
+                    const idx = state.tasks.findIndex((t) => t._id === updated._id);
+                    if (idx !== -1) state.tasks[idx] = updated;
+                } else if (action.payload.taskId) {
+                    const idx = state.tasks.findIndex((t) => t._id === action.payload.taskId);
+                    if (idx !== -1) {
+                        state.tasks[idx].labels = action.payload.labels;
+                        if (action.payload.activity) state.tasks[idx].activity = action.payload.activity;
+                    }
+                }
+            })
+            .addCase(updateTaskLabels.rejected, (state, action) => {
+                state.labelsLoading = false;
+                state.error = action.payload;
             });
 
         // ── breakdownTaskWithAI ──────────────────────────────────────────────

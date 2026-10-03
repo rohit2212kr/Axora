@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Calendar, Trash2, CheckSquare, GripVertical } from "lucide-react";
+import { Calendar, Trash2, CheckSquare, GripVertical, MessageSquare } from "lucide-react";
 import { updateTaskStatus, deleteTask } from "../../features/taskSlice";
 
 const PRIORITY_STYLES = {
@@ -52,6 +52,8 @@ const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
     const overdue = isOverdue(task.dueDate) && task.status !== "completed";
     const subtasks = task.subtasks || [];
     const completedSubtasks = subtasks.filter((s) => s.isCompleted).length;
+    const labels = task.labels || [];
+    const commentCount = task.comments?.length || 0;
 
     return (
         <div
@@ -95,6 +97,30 @@ const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
                 </div>
             </div>
 
+            {/* Labels Pills */}
+            {labels.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 items-center">
+                    {labels.slice(0, 3).map((lbl, idx) => (
+                        <span
+                            key={idx}
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border tracking-wide"
+                            style={{
+                                backgroundColor: `${lbl.color}18`,
+                                color: lbl.color,
+                                borderColor: `${lbl.color}35`,
+                            }}
+                        >
+                            {lbl.name}
+                        </span>
+                    ))}
+                    {labels.length > 3 && (
+                        <span className="text-[10px] text-muted-foreground font-medium px-1">
+                            +{labels.length - 3}
+                        </span>
+                    )}
+                </div>
+            )}
+
             {/* Title */}
             <p className="text-sm font-medium text-foreground leading-snug group-hover:text-primary transition-colors">
                 {task.title}
@@ -121,15 +147,24 @@ const TaskCard = ({ task, workspaceId, projectId, onSelectTask }) => {
                 </div>
             )}
 
-            {/* Footer: due date + status mover */}
+            {/* Footer: due date + comment count + status mover */}
             <div className="flex items-center justify-between gap-2 mt-auto pt-1">
-                {task.dueDate ? (
-                    <span className={`flex items-center gap-1 text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(task.dueDate)}
-                        {overdue && " • Overdue"}
-                    </span>
-                ) : <span />}
+                <div className="flex items-center gap-3">
+                    {task.dueDate ? (
+                        <span className={`flex items-center gap-1 text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(task.dueDate)}
+                            {overdue && " • Overdue"}
+                        </span>
+                    ) : null}
+
+                    {commentCount > 0 && (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground" title={`${commentCount} comment${commentCount > 1 ? "s" : ""}`}>
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            {commentCount}
+                        </span>
+                    )}
+                </div>
 
                 {/* Quick status mover */}
                 <select
