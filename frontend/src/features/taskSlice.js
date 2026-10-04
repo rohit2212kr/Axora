@@ -224,6 +224,46 @@ const taskSlice = createSlice({
                 task.status = status;
             }
         },
+        taskCreatedFromSocket(state, action) {
+            const task = action.payload;
+            if (!task || !task._id) return;
+            const exists = state.tasks.some((t) => t._id === task._id);
+            if (!exists) {
+                state.tasks.unshift(task);
+            }
+        },
+        taskUpdatedFromSocket(state, action) {
+            const task = action.payload;
+            if (!task || !task._id) return;
+            const idx = state.tasks.findIndex((t) => t._id === task._id);
+            if (idx !== -1) {
+                state.tasks[idx] = { ...state.tasks[idx], ...task };
+            } else {
+                state.tasks.unshift(task);
+            }
+        },
+        taskDeletedFromSocket(state, action) {
+            const taskId = action.payload;
+            if (!taskId) return;
+            state.tasks = state.tasks.filter((t) => t._id !== taskId);
+        },
+        taskCommentFromSocket(state, action) {
+            const { taskId, comments, activity, task } = action.payload;
+            if (task && task._id) {
+                const idx = state.tasks.findIndex((t) => t._id === task._id);
+                if (idx !== -1) {
+                    state.tasks[idx] = { ...state.tasks[idx], ...task };
+                    return;
+                }
+            }
+            if (taskId) {
+                const idx = state.tasks.findIndex((t) => t._id === taskId);
+                if (idx !== -1) {
+                    if (comments) state.tasks[idx].comments = comments;
+                    if (activity) state.tasks[idx].activity = activity;
+                }
+            }
+        },
     },
     extraReducers: (builder) => {
 
@@ -389,5 +429,14 @@ const taskSlice = createSlice({
     },
 });
 
-export const { clearTaskError, clearAiError, clearTasks, optimisticallyMoveTask } = taskSlice.actions;
+export const {
+    clearTaskError,
+    clearAiError,
+    clearTasks,
+    optimisticallyMoveTask,
+    taskCreatedFromSocket,
+    taskUpdatedFromSocket,
+    taskDeletedFromSocket,
+    taskCommentFromSocket,
+} = taskSlice.actions;
 export default taskSlice.reducer;

@@ -17,7 +17,8 @@
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.87.0",
     "react-redux": "^9.3.0",
-    "react-router-dom": "^7.18.3"
+    "react-router-dom": "^7.18.3",
+    "socket.io-client": "^4.8.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

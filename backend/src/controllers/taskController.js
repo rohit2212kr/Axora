@@ -2,6 +2,7 @@ const Task = require("../models/taskModel");
 const Project = require("../models/project.model");
 const Workspace = require("../models/Workspace");
 const aiService = require("../services/aiService");
+const { emitToProject } = require("../socket/socketHandler");
 
 // Single source of truth for allowed task statuses
 const VALID_STATUSES = ["todo", "in_progress", "in_review", "completed"];
@@ -143,6 +144,16 @@ const createTask = async (req, res) => {
 
         // Populate after creation
         task = await task.populate(TASK_POPULATE);
+
+        // Broadcast real-time event
+        emitToProject(projectId, "task:created", {
+            task,
+            user: {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+            },
+        });
 
         return res.status(201).json({
             success: true,
@@ -389,6 +400,16 @@ const updateTask = async (req, res) => {
         // Populate after save
         await task.populate(TASK_POPULATE);
 
+        // Broadcast real-time event
+        emitToProject(task.project || projectId, "task:updated", {
+            task,
+            user: {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+            },
+        });
+
         return res.status(200).json({
             success: true,
             message: "Task updated successfully",
@@ -462,6 +483,29 @@ const addComment = async (req, res) => {
         await task.populate(TASK_POPULATE);
 
         const addedComment = task.comments[task.comments.length - 1];
+
+        // Broadcast real-time event
+        emitToProject(task.project, "task:comment", {
+            taskId: task._id,
+            comment: addedComment,
+            comments: task.comments,
+            activity: task.activity,
+            task,
+            action: "added",
+            user: {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+            },
+        });
+        emitToProject(task.project, "task:updated", {
+            task,
+            user: {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+            },
+        });
 
         return res.status(201).json({
             success: true,
@@ -543,6 +587,29 @@ const deleteComment = async (req, res) => {
         await task.save();
         await task.populate(TASK_POPULATE);
 
+        // Broadcast real-time event
+        emitToProject(task.project, "task:comment", {
+            taskId: task._id,
+            commentId,
+            comments: task.comments,
+            activity: task.activity,
+            task,
+            action: "deleted",
+            user: {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+            },
+        });
+        emitToProject(task.project, "task:updated", {
+            task,
+            user: {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+            },
+        });
+
         return res.status(200).json({
             success: true,
             message: "Comment deleted successfully",
@@ -616,6 +683,16 @@ const updateTaskLabels = async (req, res) => {
 
         await task.save();
         await task.populate(TASK_POPULATE);
+
+        // Broadcast real-time event
+        emitToProject(task.project, "task:updated", {
+            task,
+            user: {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+            },
+        });
 
         return res.status(200).json({
             success: true,
@@ -691,7 +768,19 @@ const deleteTask = async (req, res) => {
             });
         }
 
+        const targetProjectId = task.project || projectId;
         await Task.findByIdAndDelete(taskId);
+
+        // Broadcast real-time event
+        emitToProject(targetProjectId, "task:deleted", {
+            taskId,
+            projectId: targetProjectId,
+            user: {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+            },
+        });
 
         return res.status(200).json({
             success: true,
@@ -802,6 +891,16 @@ const generateTaskSubtasks = async (req, res) => {
 
         await task.save();
         await task.populate(TASK_POPULATE);
+
+        // Broadcast real-time event
+        emitToProject(task.project, "task:updated", {
+            task,
+            user: {
+                _id: req.user._id,
+                name: req.user.name,
+                email: req.user.email,
+            },
+        });
 
         return res.status(200).json({
             success: true,
