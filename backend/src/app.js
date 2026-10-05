@@ -5,6 +5,7 @@ const workspaceRoutes = require("./routes/workspaceRoutes");
 const projectRoutes   = require("./routes/projectRoutes");
 const taskRoutes      = require("./routes/taskRoutes");
 const aiRoutes        = require("./routes/ai.routes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use(
     projectRoutes
 );
 app.use(["/api/v1/tasks", "/api/tasks", "/v1/tasks"], taskRoutes);
+app.use(["/api/v1/analytics", "/api/analytics", "/v1/analytics"], analyticsRoutes);
 app.use(["/api/v1", "/api", "/v1"], aiRoutes);
 
 module.exports = app;

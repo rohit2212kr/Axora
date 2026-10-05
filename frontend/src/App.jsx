@@ -12,6 +12,7 @@ import Dashboard        from "./pages/Dashboard";
 import Projects         from "./pages/Projects";
 import ProjectBoard     from "./pages/ProjectBoard";
 import InviteAcceptPage from "./pages/InviteAcceptPage";
+import AnalyticsPage    from "./pages/AnalyticsPage";
 
 const RootRoute = () => {
     const { isAuthenticated } = useSelector((s) => s.auth);
@@ -48,6 +49,8 @@ const App = () => (
                 <Route path="/dashboard"           element={<Dashboard />} />
                 <Route path="/projects"            element={<Projects />} />
                 <Route path="/projects/:projectId" element={<ProjectBoard />} />
+                <Route path="/analytics"           element={<AnalyticsPage />} />
+                <Route path="/workspace/:workspaceId/analytics" element={<AnalyticsPage />} />
             </Route>
 
             {/* Catch-all */}

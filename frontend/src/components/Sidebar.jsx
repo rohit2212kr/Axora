@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
     LayoutDashboard,
+    BarChart3,
     FolderKanban,
     ChevronDown,
     Plus,
@@ -115,6 +116,10 @@ const Sidebar = ({ onOpenCreateWorkspace, onOpenInviteMember, onOpenWorkspaceMem
         <NavLink to="/projects" className={navLinkClass}>
           <FolderKanban className="w-4 h-4 shrink-0" />
           Projects
+        </NavLink>
+        <NavLink to="/analytics" className={navLinkClass}>
+          <BarChart3 className="w-4 h-4 shrink-0" />
+          Analytics
         </NavLink>
         <button
           onClick={() => onOpenWorkspaceMembers?.()}
