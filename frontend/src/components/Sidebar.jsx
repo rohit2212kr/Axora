@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { LayoutDashboard, FolderKanban, ChevronDown, Plus, UserPlus, Building2 } from "lucide-react";
+import {
+    LayoutDashboard,
+    FolderKanban,
+    ChevronDown,
+    Plus,
+    UserPlus,
+    Building2,
+    Users,
+} from "lucide-react";
 import { fetchWorkspaces, setCurrentWorkspace } from "../features/workspaceSlice";
 
-const Sidebar = ({ onOpenCreateWorkspace, onOpenInviteMember }) => {
+const Sidebar = ({ onOpenCreateWorkspace, onOpenInviteMember, onOpenWorkspaceMembers }) => {
   const dispatch = useDispatch();
   const { workspaces, currentWorkspace } = useSelector((s) => s.workspace);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -80,6 +88,13 @@ const Sidebar = ({ onOpenCreateWorkspace, onOpenInviteMember }) => {
                 New Workspace
               </button>
               <button
+                onClick={() => { setDropdownOpen(false); onOpenWorkspaceMembers?.(); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-secondary transition-colors"
+              >
+                <Users className="w-3.5 h-3.5" />
+                Manage Members
+              </button>
+              <button
                 onClick={() => { setDropdownOpen(false); onOpenInviteMember?.(); }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-secondary transition-colors"
               >
@@ -101,6 +116,13 @@ const Sidebar = ({ onOpenCreateWorkspace, onOpenInviteMember }) => {
           <FolderKanban className="w-4 h-4 shrink-0" />
           Projects
         </NavLink>
+        <button
+          onClick={() => onOpenWorkspaceMembers?.()}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-secondary transition-all cursor-pointer text-left"
+        >
+          <Users className="w-4 h-4 shrink-0" />
+          Members
+        </button>
       </nav>
 
       {/* Footer */}

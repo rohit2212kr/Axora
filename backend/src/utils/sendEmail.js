@@ -162,4 +162,84 @@ const sendEmail = async ({ to, subject, html, text }) => {
     return await transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendEmail, buildOtpTemplate };
+/**
+ * Build a modern, SaaS-styled HTML email template for workspace invitations
+ * @param {Object} params
+ * @param {string} params.workspaceName - Name of the workspace
+ * @param {string} params.inviterName   - Name of person who sent the invite
+ * @param {string} params.role          - Invited role (e.g., "member", "admin", "viewer")
+ * @param {string} params.inviteUrl     - Full link to accept invitation
+ * @returns {string} HTML markup
+ */
+const buildInviteTemplate = ({ workspaceName, inviterName, role, inviteUrl }) => {
+    const year = new Date().getFullYear();
+    const formattedRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Member";
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Invitation to join ${workspaceName}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; color: #18181b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f5; width: 100%; margin: 0; padding: 48px 16px;">
+    <tr>
+      <td align="center">
+        <!-- Main Card Container -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);">
+          <tr>
+            <td style="padding: 40px 40px 32px 40px;">
+              <!-- Brand Wordmark -->
+              <div style="margin-bottom: 28px;">
+                <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 800; letter-spacing: 2px; color: #09090b; text-transform: uppercase; display: inline-block;">
+                  AXORA<span style="color: #2563eb; font-size: 18px; line-height: 1;">.</span>
+                </span>
+              </div>
+
+              <!-- Main Heading -->
+              <h1 style="margin: 0 0 12px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 22px; font-weight: 700; color: #09090b; line-height: 1.3; letter-spacing: -0.3px;">
+                Join ${workspaceName} on Axora
+              </h1>
+
+              <!-- Subtext -->
+              <p style="margin: 0 0 24px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #52525b;">
+                <strong style="color: #18181b;">${inviterName || "A team member"}</strong> has invited you to join the <strong style="color: #18181b;">${workspaceName}</strong> workspace as a <strong style="color: #2563eb;">${formattedRole}</strong>.
+              </p>
+
+              <!-- CTA Button -->
+              <div style="margin: 32px 0; text-align: left;">
+                <a href="${inviteUrl}" target="_blank" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 8px; box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);">
+                  Accept Invitation &rarr;
+                </a>
+              </div>
+
+              <!-- Direct Link Fallback -->
+              <p style="margin: 0 0 24px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #71717a;">
+                Or copy and paste this link in your browser:<br />
+                <a href="${inviteUrl}" style="color: #2563eb; text-decoration: underline; word-break: break-all;">${inviteUrl}</a>
+              </p>
+
+              <!-- Expiry Note -->
+              <p style="margin: 0 0 28px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #71717a;">
+                This invitation link will expire in 7 days. If you weren't expecting this invitation, you can safely ignore this email.
+              </p>
+
+              <!-- Divider & Footer -->
+              <div style="border-top: 1px solid #e4e4e7; padding-top: 20px;">
+                <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #71717a;">
+                  &copy; ${year} Axora Platform Inc. &bull; Collaborative Workspace
+                </p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+};
+
+module.exports = { sendEmail, buildOtpTemplate, buildInviteTemplate };

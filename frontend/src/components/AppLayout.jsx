@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Loader2 } from "lucide-react";
-import Sidebar               from "./Sidebar";
-import Topbar                from "./Topbar";
-import CreateWorkspaceModal  from "./modals/CreateWorkspaceModal";
-import InviteMemberModal     from "./modals/InviteMemberModal";
+import Sidebar                from "./Sidebar";
+import Topbar                 from "./Topbar";
+import CreateWorkspaceModal   from "./modals/CreateWorkspaceModal";
+import InviteMemberModal      from "./modals/InviteMemberModal";
+import WorkspaceMembersModal  from "./modals/WorkspaceMembersModal";
 import { fetchWorkspaces }    from "../features/workspaceSlice";
 
 const AppLayout = () => {
@@ -13,8 +14,9 @@ const AppLayout = () => {
   const { isAuthenticated } = useSelector((s) => s.auth);
   const { workspaces, currentWorkspace, loading } = useSelector((s) => s.workspace);
 
-  const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
-  const [isInviteMemberOpen,    setIsInviteMemberOpen]    = useState(false);
+  const [isCreateWorkspaceOpen,  setIsCreateWorkspaceOpen]  = useState(false);
+  const [isInviteMemberOpen,     setIsInviteMemberOpen]     = useState(false);
+  const [isWorkspaceMembersOpen, setIsWorkspaceMembersOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && workspaces.length === 0) {
@@ -27,8 +29,9 @@ const AppLayout = () => {
 
       {/* Fixed sidebar */}
       <Sidebar
-        onOpenCreateWorkspace={() => setIsCreateWorkspaceOpen(true)}
-        onOpenInviteMember={()    => setIsInviteMemberOpen(true)}
+        onOpenCreateWorkspace={()   => setIsCreateWorkspaceOpen(true)}
+        onOpenInviteMember={()      => setIsInviteMemberOpen(true)}
+        onOpenWorkspaceMembers={() => setIsWorkspaceMembersOpen(true)}
       />
 
       {/* Main content - offset by sidebar width */}
@@ -46,7 +49,7 @@ const AppLayout = () => {
         </main>
       </div>
 
-      {/* Real modals */}
+      {/* Modals */}
       <CreateWorkspaceModal
         isOpen={isCreateWorkspaceOpen}
         onClose={() => setIsCreateWorkspaceOpen(false)}
@@ -54,6 +57,10 @@ const AppLayout = () => {
       <InviteMemberModal
         isOpen={isInviteMemberOpen}
         onClose={() => setIsInviteMemberOpen(false)}
+      />
+      <WorkspaceMembersModal
+        isOpen={isWorkspaceMembersOpen}
+        onClose={() => setIsWorkspaceMembersOpen(false)}
       />
     </div>
   );

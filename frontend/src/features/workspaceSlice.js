@@ -31,6 +31,19 @@ export const fetchWorkspaces = createAsyncThunk(
     }
 );
 
+/** Fetch single workspace by ID with populated members and invites */
+export const fetchWorkspaceDetails = createAsyncThunk(
+    "workspace/fetchWorkspaceDetails",
+    async (workspaceId, { rejectWithValue }) => {
+        try {
+            const { data } = await api.get(`/workspaces/${workspaceId}`);
+            return data.data;
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
 /** Create a new workspace */
 export const createWorkspace = createAsyncThunk(
     "workspace/createWorkspace",
@@ -44,17 +57,73 @@ export const createWorkspace = createAsyncThunk(
     }
 );
 
-/** Invite a member to a workspace (Owner / Admin only) */
-export const inviteMember = createAsyncThunk(
-    "workspace/inviteMember",
+/** Send a workspace invitation link via email (Owner / Admin only) */
+export const sendWorkspaceInvite = createAsyncThunk(
+    "workspace/sendWorkspaceInvite",
     async ({ workspaceId, email, role }, { rejectWithValue }) => {
         try {
-            const { data } = await api.post("/workspaces/invite", {
-                workspaceId,
+            const { data } = await api.post(`/workspaces/${workspaceId}/invites`, {
                 email,
                 role,
             });
+            return data;
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+// Backward-compatible alias
+export const inviteMember = sendWorkspaceInvite;
+
+/** Validate an invite token and retrieve workspace metadata */
+export const getInviteDetails = createAsyncThunk(
+    "workspace/getInviteDetails",
+    async (token, { rejectWithValue }) => {
+        try {
+            const { data } = await api.get(`/workspaces/invite/${token}`);
+            return data.invitation;
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+/** Accept workspace invitation */
+export const acceptWorkspaceInvite = createAsyncThunk(
+    "workspace/acceptWorkspaceInvite",
+    async (token, { rejectWithValue }) => {
+        try {
+            const { data } = await api.post(`/workspaces/invite/${token}/accept`);
             return data.workspace;
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+/** Remove a member from a workspace (Owner / Admin) */
+export const removeWorkspaceMember = createAsyncThunk(
+    "workspace/removeWorkspaceMember",
+    async ({ workspaceId, memberId }, { rejectWithValue }) => {
+        try {
+            const { data } = await api.delete(`/workspaces/${workspaceId}/members/${memberId}`);
+            return { workspaceId, memberId, workspace: data.workspace };
+        } catch (error) {
+            return rejectWithValue(extractError(error));
+        }
+    }
+);
+
+/** Update a member's role (Owner only) */
+export const updateWorkspaceMemberRole = createAsyncThunk(
+    "workspace/updateWorkspaceMemberRole",
+    async ({ workspaceId, memberId, role }, { rejectWithValue }) => {
+        try {
+            const { data } = await api.patch(`/workspaces/${workspaceId}/members/${memberId}/role`, {
+                role,
+            });
+            return { workspaceId, memberId, role, workspace: data.workspace, member: data.member };
         } catch (error) {
             return rejectWithValue(extractError(error));
         }
@@ -74,7 +143,7 @@ export const fetchProjects = createAsyncThunk(
     }
 );
 
-/** Create a new project in a workspace */
+/** Create a new project inside a workspace */
 export const createProject = createAsyncThunk(
     "workspace/createProject",
     async ({ workspaceId, name, description, status, deadline }, { rejectWithValue }) => {
@@ -130,6 +199,10 @@ const workspaceSlice = createSlice({
         dashboardLoading:  false,
         loading:           false,
         error:             null,
+        activeInvite:      null,
+        inviteLoading:     false,
+        inviteError:       null,
+        membersLoading:    false,
     },
     reducers: {
         setCurrentWorkspace(state, action) {
@@ -144,6 +217,12 @@ const workspaceSlice = createSlice({
         },
         clearWorkspaceError(state) {
             state.error = null;
+            state.inviteError = null;
+        },
+        clearActiveInvite(state) {
+            state.activeInvite = null;
+            state.inviteError = null;
+            state.inviteLoading = false;
         },
     },
     extraReducers: (builder) => {
@@ -181,6 +260,19 @@ const workspaceSlice = createSlice({
                 state.error   = action.payload;
             });
 
+        // ── fetchWorkspaceDetails ────────────────────────────────────────────
+        builder
+            .addCase(fetchWorkspaceDetails.fulfilled, (state, action) => {
+                if (!action.payload) return;
+                const updated = action.payload;
+                const idx = state.workspaces.findIndex((w) => w._id === updated._id);
+                if (idx !== -1) state.workspaces[idx] = updated;
+                if (state.currentWorkspace?._id === updated._id) {
+                    state.currentWorkspace = updated;
+                    localStorage.setItem("axora_current_workspace", JSON.stringify(updated));
+                }
+            });
+
         // ── createWorkspace ──────────────────────────────────────────────────
         builder
             .addCase(createWorkspace.pending, (state) => {
@@ -199,6 +291,123 @@ const workspaceSlice = createSlice({
             .addCase(createWorkspace.rejected, (state, action) => {
                 state.loading = false;
                 state.error   = action.payload;
+            });
+
+        // ── sendWorkspaceInvite ──────────────────────────────────────────────
+        builder
+            .addCase(sendWorkspaceInvite.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(sendWorkspaceInvite.fulfilled, (state, action) => {
+                state.loading = false;
+                const updatedWs = action.payload.workspace;
+                if (updatedWs) {
+                    const idx = state.workspaces.findIndex((w) => w._id === updatedWs._id);
+                    if (idx !== -1) state.workspaces[idx] = updatedWs;
+                    if (state.currentWorkspace?._id === updatedWs._id) {
+                        state.currentWorkspace = updatedWs;
+                        localStorage.setItem("axora_current_workspace", JSON.stringify(updatedWs));
+                    }
+                }
+            })
+            .addCase(sendWorkspaceInvite.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            });
+
+        // ── getInviteDetails ─────────────────────────────────────────────────
+        builder
+            .addCase(getInviteDetails.pending, (state) => {
+                state.inviteLoading = true;
+                state.inviteError   = null;
+            })
+            .addCase(getInviteDetails.fulfilled, (state, action) => {
+                state.inviteLoading = false;
+                state.activeInvite  = action.payload;
+            })
+            .addCase(getInviteDetails.rejected, (state, action) => {
+                state.inviteLoading = false;
+                state.inviteError   = action.payload;
+            });
+
+        // ── acceptWorkspaceInvite ────────────────────────────────────────────
+        builder
+            .addCase(acceptWorkspaceInvite.pending, (state) => {
+                state.inviteLoading = true;
+                state.inviteError   = null;
+            })
+            .addCase(acceptWorkspaceInvite.fulfilled, (state, action) => {
+                state.inviteLoading = false;
+                const newWs = action.payload;
+                if (newWs) {
+                    const idx = state.workspaces.findIndex((w) => w._id === newWs._id);
+                    if (idx !== -1) {
+                        state.workspaces[idx] = newWs;
+                    } else {
+                        state.workspaces.push(newWs);
+                    }
+                    state.currentWorkspace = newWs;
+                    localStorage.setItem("axora_current_workspace_id", newWs._id);
+                    localStorage.setItem("axora_current_workspace", JSON.stringify(newWs));
+                }
+            })
+            .addCase(acceptWorkspaceInvite.rejected, (state, action) => {
+                state.inviteLoading = false;
+                state.inviteError   = action.payload;
+            });
+
+        // ── removeWorkspaceMember ────────────────────────────────────────────
+        builder
+            .addCase(removeWorkspaceMember.pending, (state) => {
+                state.membersLoading = true;
+            })
+            .addCase(removeWorkspaceMember.fulfilled, (state, action) => {
+                state.membersLoading = false;
+                const { memberId, workspace: updatedWs } = action.payload;
+                if (updatedWs) {
+                    const idx = state.workspaces.findIndex((w) => w._id === updatedWs._id);
+                    if (idx !== -1) state.workspaces[idx] = updatedWs;
+                    if (state.currentWorkspace?._id === updatedWs._id) {
+                        state.currentWorkspace = updatedWs;
+                        localStorage.setItem("axora_current_workspace", JSON.stringify(updatedWs));
+                    }
+                } else if (state.currentWorkspace?.members) {
+                    state.currentWorkspace.members = state.currentWorkspace.members.filter(
+                        (m) => m._id !== memberId && (m.user?._id || m.user) !== memberId
+                    );
+                }
+            })
+            .addCase(removeWorkspaceMember.rejected, (state, action) => {
+                state.membersLoading = false;
+                state.error = action.payload;
+            });
+
+        // ── updateWorkspaceMemberRole ────────────────────────────────────────
+        builder
+            .addCase(updateWorkspaceMemberRole.pending, (state) => {
+                state.membersLoading = true;
+            })
+            .addCase(updateWorkspaceMemberRole.fulfilled, (state, action) => {
+                state.membersLoading = false;
+                const { memberId, role, workspace: updatedWs } = action.payload;
+                if (updatedWs) {
+                    const idx = state.workspaces.findIndex((w) => w._id === updatedWs._id);
+                    if (idx !== -1) state.workspaces[idx] = updatedWs;
+                    if (state.currentWorkspace?._id === updatedWs._id) {
+                        state.currentWorkspace = updatedWs;
+                        localStorage.setItem("axora_current_workspace", JSON.stringify(updatedWs));
+                    }
+                } else if (state.currentWorkspace?.members) {
+                    const target = state.currentWorkspace.members.find(
+                        (m) => m._id === memberId || (m.user?._id || m.user) === memberId
+                    );
+                    if (target) target.role = role;
+                }
+            })
+            .addCase(updateWorkspaceMemberRole.rejected, (state, action) => {
+                state.membersLoading = false;
+                state.error = action.payload;
             });
 
         // ── fetchProjects ────────────────────────────────────────────────────
@@ -261,15 +470,24 @@ const workspaceSlice = createSlice({
                 state.dashboardLoading = false;
             })
             .addCase("auth/logout", (state) => {
-                state.workspaces = [];
+                state.workspaces       = [];
                 state.currentWorkspace = null;
-                state.projects = [];
-                state.dashboard = null;
-                state.loading = false;
-                state.error = null;
+                state.projects         = [];
+                state.dashboard        = null;
+                state.loading          = false;
+                state.error            = null;
+                state.activeInvite     = null;
+                state.inviteLoading    = false;
+                state.inviteError      = null;
+                state.membersLoading   = false;
             });
     },
 });
 
-export const { setCurrentWorkspace, clearWorkspaceError } = workspaceSlice.actions;
+export const {
+    setCurrentWorkspace,
+    clearWorkspaceError,
+    clearActiveInvite,
+} = workspaceSlice.actions;
+
 export default workspaceSlice.reducer;

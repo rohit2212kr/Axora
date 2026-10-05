@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, Lock, Loader2, ArrowLeft } from "lucide-react";
 import { loginUser, clearError, clearAuthFlow } from "../features/authSlice";
 
 const Login = () => {
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
@@ -37,7 +39,7 @@ const Login = () => {
     }
   }, [requiresVerification, pendingEmail, navigate]);
 
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated) return <Navigate to={redirectTo} replace />;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">

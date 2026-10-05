@@ -1,16 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import ProtectedRoute from "./components/ProtectedRoute";
-import AppLayout      from "./components/AppLayout";
-import LandingPage    from "./pages/LandingPage";
-import Login          from "./pages/Login";
-import Signup         from "./pages/Signup";
-import VerifyOTP      from "./pages/VerifyOTP";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword  from "./pages/ResetPassword";
-import Dashboard      from "./pages/Dashboard";
-import Projects       from "./pages/Projects";
-import ProjectBoard   from "./pages/ProjectBoard";
+import ProtectedRoute   from "./components/ProtectedRoute";
+import AppLayout        from "./components/AppLayout";
+import LandingPage      from "./pages/LandingPage";
+import Login            from "./pages/Login";
+import Signup           from "./pages/Signup";
+import VerifyOTP        from "./pages/VerifyOTP";
+import ForgotPassword   from "./pages/ForgotPassword";
+import ResetPassword    from "./pages/ResetPassword";
+import Dashboard        from "./pages/Dashboard";
+import Projects         from "./pages/Projects";
+import ProjectBoard     from "./pages/ProjectBoard";
+import InviteAcceptPage from "./pages/InviteAcceptPage";
 
 const RootRoute = () => {
     const { isAuthenticated } = useSelector((s) => s.auth);
@@ -32,6 +33,9 @@ const App = () => (
             <Route path="/verify-otp"      element={<VerifyOTP />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password"  element={<ResetPassword />} />
+
+            {/* Public invitation accept page */}
+            <Route path="/invite/:token"   element={<InviteAcceptPage />} />
 
             {/* Protected - all children share the AppLayout shell */}
             <Route

@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { Mail, Lock, User, Loader2, ArrowLeft, ShieldCheck, RefreshCw } from "lucide-react";
 import { registerUser, verifyOTP, resendOTP, clearError, clearAuthFlow } from "../features/authSlice";
 
 const Signup = () => {
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/dashboard";
   const dispatch = useDispatch();
   const {
     isAuthenticated,
@@ -103,7 +105,7 @@ const Signup = () => {
     dispatch(verifyOTP({ email: pendingEmail, otp }));
   };
 
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated) return <Navigate to={redirectTo} replace />;
 
   // ── OTP Verification Screen ──
   if (otpSent && pendingEmail) {
