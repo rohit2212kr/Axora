@@ -62,12 +62,22 @@ const initSocket = (server) => {
     const allowedOrigins = [
         process.env.CLIENT_URL,
         "http://localhost:5173",
+        "https://axoraa-gray.vercel.app",
     ].filter(Boolean);
 
     io = new Server(server, {
         cors: {
             origin: (origin, callback) => {
-                if (!origin || allowedOrigins.includes(origin)) {
+                // Allow requests with no origin
+                if (!origin) return callback(null, true);
+
+                // Allow explicit list, any localhost, or any *.vercel.app domain
+                const isAllowed =
+                    allowedOrigins.includes(origin) ||
+                    origin.endsWith(".vercel.app") ||
+                    origin.startsWith("http://localhost:");
+
+                if (isAllowed) {
                     callback(null, true);
                 } else {
                     callback(null, false);

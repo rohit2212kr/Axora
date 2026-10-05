@@ -9,34 +9,41 @@ const aiRoutes        = require("./routes/ai.routes");
 const app = express();
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
-// Accepts CLIENT_URL from env (set to the Vercel URL in production).
-// Falls back to localhost:5173 so local dev works without any .env change.
 const allowedOrigins = [
-    process.env.CLIENT_URL,     // e.g. https://axora.vercel.app  (set in Render dashboard)
-    "http://localhost:5173",    // Vite dev server
-].filter(Boolean);             // strips undefined if CLIENT_URL is not set
+    process.env.CLIENT_URL,
+    "http://localhost:5173",
+    "https://axoraa-gray.vercel.app",
+].filter(Boolean);
 
 const corsOptions = {
-    origin: (origin, callback) => {
-        // Allow requests with no origin (Postman, server-to-server, curl, mobile)
-        if (!origin || allowedOrigins.includes(origin)) {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, server-to-server)
+        if (!origin) return callback(null, true);
+
+        // Allow explicit list, any localhost, or any *.vercel.app domain
+        const isAllowed =
+            allowedOrigins.includes(origin) ||
+            origin.endsWith(".vercel.app") ||
+            origin.startsWith("http://localhost:");
+
+        if (isAllowed) {
             callback(null, true);
         } else {
-            // Return false — NOT an Error — so the browser gets a proper CORS
-            // rejection (403) instead of an unhandled 500 on preflight OPTIONS.
-            callback(null, false);
+            callback(new Error("Blocked by CORS"));
         }
     },
-    credentials:    true,
-    methods:        ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-// app.use(cors()) without a path applies to ALL requests — including OPTIONS preflight.
-// The cors middleware short-circuits OPTIONS requests automatically (returns 204 with
-// correct headers) when preflightContinue is false (the default). A separate
-// app.options() wildcard is redundant and breaks under Express 5 + path-to-regexp v8.
 app.use(cors(corsOptions));
+try {
+    app.options("*", cors(corsOptions));
+} catch {
+    // Express 5 + path-to-regexp v8 compatibility
+    app.options(/(.*)/, cors(corsOptions));
+}
 
 app.use(express.json());
 
