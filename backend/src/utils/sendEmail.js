@@ -121,6 +121,36 @@ const sendEmail = async ({ to, subject, html, text }) => {
         text ||
         "Your Axora verification code. Please view this email in an HTML-compatible email client to see your code.";
 
+    // Primary Cloud Transport: Brevo HTTPS REST API (Port 443)
+    if (process.env.BREVO_API_KEY) {
+        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+            method: "POST",
+            headers: {
+                "accept": "application/json",
+                "api-key": process.env.BREVO_API_KEY,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                sender: { name: "Axora", email: process.env.EMAIL_USER },
+                to: [{ email: to }],
+                subject: subject,
+                htmlContent: html,
+                textContent: plainText,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage =
+                errorData.message ||
+                `Brevo API error: ${response.status} ${response.statusText}`;
+            throw new Error(`Failed to send email via Brevo: ${errorMessage}`);
+        }
+
+        return await response.json();
+    }
+
+    // Local Development Fallback: Nodemailer SMTP
     const mailOptions = {
         from: `"Axora" <${process.env.EMAIL_USER}>`,
         to,
