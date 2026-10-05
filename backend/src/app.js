@@ -48,10 +48,17 @@ try {
 app.use(express.json());
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-app.use("/api/v1/auth",                             authRoutes);
-app.use("/api/v1/workspaces",                       workspaceRoutes);
-app.use("/api/v1/workspaces/:workspaceId/projects", projectRoutes);
-app.use("/api/v1/tasks",                            taskRoutes);
-app.use("/api/v1",                                  aiRoutes);
+app.use(["/api/v1/auth", "/api/auth", "/v1/auth"], authRoutes);
+app.use(["/api/v1/workspaces", "/api/workspaces", "/v1/workspaces"], workspaceRoutes);
+app.use(
+    [
+        "/api/v1/workspaces/:workspaceId/projects",
+        "/api/workspaces/:workspaceId/projects",
+        "/v1/workspaces/:workspaceId/projects",
+    ],
+    projectRoutes
+);
+app.use(["/api/v1/tasks", "/api/tasks", "/v1/tasks"], taskRoutes);
+app.use(["/api/v1", "/api", "/v1"], aiRoutes);
 
 module.exports = app;

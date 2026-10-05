@@ -7,8 +7,15 @@
 const resolveBaseURL = () => {
     const envURL = import.meta.env.VITE_API_URL;
     if (!envURL) return "http://localhost:5000/api/v1";
-    // Strip any trailing slash, then append /api/v1
-    return `${envURL.replace(/\/$/, "")}/api/v1`;
+
+    // Normalize: strip trailing slashes and any pre-existing /api/v1, /api, or /v1 suffix
+    const cleanURL = envURL
+        .replace(/\/+$/, "")
+        .replace(/\/api\/v1$/, "")
+        .replace(/\/api$/, "")
+        .replace(/\/v1$/, "");
+
+    return `${cleanURL}/api/v1`;
 };
 
 // Central Axios instance — all API calls go through this
